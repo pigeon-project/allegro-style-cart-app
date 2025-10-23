@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,7 +55,7 @@ class CartController {
     QuoteResponse addItem(
         @Parameter(description = "Cart ID", required = true)
         @PathVariable("cartId") String cartId,
-        @RequestBody AddItemRequest request
+        @Valid @RequestBody AddItemRequest request
     ) {
         // Get current cart or create empty one
         CartSnapshot currentCart = cartStore.getCart(cartId).orElse(
@@ -113,7 +114,7 @@ class CartController {
         @PathVariable("cartId") String cartId,
         @Parameter(description = "Item ID to update", required = true)
         @PathVariable("itemId") String itemId,
-        @RequestBody UpdateItemRequest request
+        @Valid @RequestBody UpdateItemRequest request
     ) {
         // Get current cart
         CartSnapshot currentCart = cartStore.getCart(cartId)
@@ -246,7 +247,7 @@ class CartController {
     QuoteResponse calculateQuote(
         @Parameter(description = "Cart ID", required = true)
         @PathVariable("cartId") String cartId,
-        @RequestBody QuoteRequest request
+        @Valid @RequestBody QuoteRequest request
     ) {
         // Validate that the cartId in the path matches the request body
         if (!cartId.equals(request.cartId())) {

@@ -1,5 +1,8 @@
 package com.github.pigeon.cart.web;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+
 /**
  * Request to add an item to the cart.
  * Complies with API specification: body contains only productId and quantity.
@@ -8,7 +11,10 @@ package com.github.pigeon.cart.web;
  * @param quantity  Quantity to add
  */
 record AddItemRequest(
+        @NotBlank(message = "Product ID cannot be blank")
         String productId,
+        
+        @Positive(message = "Quantity must be positive")
         int quantity
 ) {
     

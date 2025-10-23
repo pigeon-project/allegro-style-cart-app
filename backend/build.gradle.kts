@@ -8,6 +8,7 @@ dependencies {
     implementation(libs.spring.boot.starter)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.oauth2.client)
     implementation(libs.spring.security.oauth2.resource.server)
@@ -15,6 +16,7 @@ dependencies {
     implementation(libs.springdoc)
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.data.jdbc)
+    implementation(libs.bucket4j.core)
 
     runtimeOnly(libs.h2)
     testRuntimeOnly(libs.junit.platform.launcher)
