@@ -30,7 +30,7 @@ jobs:
 
       - name: Create a test issue to verify permissions
         run: |
-          gh issue create --repo pigeon-project/todo-service-copilot-planning --title "Test Issue for Permissions" --body "This is a test issue to verify that the workflow has permission to create issues." || {
+          gh issue create --repo pigeon-project/allegro-style-cart-app --title "Test Issue for Permissions" --body "This is a test issue to verify that the workflow has permission to create issues." || {
             echo "::error::Failed to create test issue. Check repository permissions."
             exit 1
           }
