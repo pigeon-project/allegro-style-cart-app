@@ -28,12 +28,12 @@ jobs:
           echo "$GH_CLI_TOKEN" | gh auth login --with-token
           gh auth status
 
-#      - name: Create a test issue to verify permissions
-#        run: |
-#          gh issue create --repo pigeon-project/todo-service-copilot-planning --title "Test Issue for Permissions" --body "This is a test issue to verify that the workflow has permission to create issues." || {
-#            echo "::error::Failed to create test issue. Check repository permissions."
-#            exit 1
-#          }
+      - name: Create a test issue to verify permissions
+        run: |
+          gh issue create --repo pigeon-project/todo-service-copilot-planning --title "Test Issue for Permissions" --body "This is a test issue to verify that the workflow has permission to create issues." || {
+            echo "::error::Failed to create test issue. Check repository permissions."
+            exit 1
+          }
 
       - name: Install Copilot CLI
         run: npm install -g @github/copilot
@@ -58,10 +58,13 @@ jobs:
         working-directory: .
         env:
           GH_TOKEN: ${{ secrets.COPILOT_PAT }}
+          GH_CLI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "$GH_CLI_TOKEN" | gh auth login --with-token
+          gh auth status
           echo "--- GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
           echo "--- PROJECT_NAME: $PROJECT_NAME"
-          PROMPT="Read all files in the ./spec directory in $PROJECT_NAME. Start with ./spec/SPEC.md. Based on them create GitHub issues in the $PROJECT_NAME repo grouped by Frontend and Backend. Break work into small, dev-friendly chunks with clear titles, actionable descriptions, acceptance criteria, and use existing labels (frontend/backend). Do not create or modify files. The repository already contains the runtime base. Analyze it and focus on creating issues only. Make sure to cover all requirements in the /spec directory. When creating issues via gh CLI use GITHUB_TOKEN"
+          PROMPT="Read all files in the ./spec directory in $PROJECT_NAME. Start with ./spec/SPEC.md. Based on them create GitHub issues in the $PROJECT_NAME repo grouped by Frontend and Backend. Break work into small, dev-friendly chunks with clear titles, actionable descriptions, acceptance criteria, and use existing labels (frontend/backend). Do not create or modify files. The repository already contains the runtime base. Analyze it and focus on creating issues only. Make sure to cover all requirements in the /spec directory. When creating issues via gh CLI use GH_CLI_TOKEN"
           echo "--- PROMPT START ---"
           echo $PROMPT
           echo "--- PROMPT END ---"
