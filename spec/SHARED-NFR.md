@@ -5,15 +5,11 @@ Individual service specs may only tighten (never relax) these requirements unles
 
 ## 1. Reliability
 * Services MUST provide read-after-write consistency for single-resource fetches after successful 2xx mutations.
-* Idempotent operations (create, safe replay actions) MUST support Idempotency-Key (UUID) with ≥24h retention (returns original response on replay).
 * Client retries for idempotent operations MUST be side‑effect free.
-* Each service MUST track and review an error budget (aggregate 5xx rate) and have actionable alerts when budget burn > defined threshold.
 
 ## 2. Availability
 * Monthly availability objective: ≥99.9%.
 * Rolling deployments MUST avoid serving traffic from unready instances (readiness & liveness probes mandatory).
-* Services SHOULD be stateless at the HTTP layer (no reliance on sticky sessions).
-* Graceful shutdown MUST drain in‑flight requests.
 
 ## 3. Performance
 * Per-endpoint latency metrics (p50, p90, p95, p99) MUST be published.
@@ -28,11 +24,8 @@ Individual service specs may only tighten (never relax) these requirements unles
 * Storage growth strategies (sharding / partitioning) SHOULD be documented for datasets exceeding planned thresholds.
 
 ## 5. Security
-* All external traffic MUST use TLS (HTTPS only).
-* Authentication tokens (e.g., JWT) MUST validate signature, exp, aud, iss; rejected tokens → 401.
 * Authorization MUST be enforced server-side (zero trust toward client-provided role hints).
 * Secrets MUST reside in an approved secret management system (never in source control).
-* Sensitive tokens / invitation codes MUST be stored hashed (SHA-256 or stronger) & compared in constant time.
 * Principle of least privilege MUST guide DB/service IAM policies.
 * Security-related events (auth failures, permission denials, significant config changes) SHOULD be logged.
 
@@ -44,15 +37,11 @@ Individual service specs may only tighten (never relax) these requirements unles
 
 ## 7. Observability
 * Structured JSON logs MUST include: timestamp, level, service, environment, requestId, route/operation, durationMs, status, errorCode (if any).
-* A Correlation ID (X-Request-Id) MUST be accepted, generated if absent, and propagated to downstream calls.
 * Core metrics: RPS, latency histograms, error rate by class (4xx/5xx), saturation (CPU, memory), rate-limit hits, queue depth (if applicable).
-* Distributed tracing MUST capture inbound root spans and outbound dependency spans (with redacted statements).
 * Alerts MUST cover: elevated 5xx, p95/p99 latency SLO breach, abnormal 429 surge, error budget burn, queue backlog saturation.
 
 ## 8. Backward Compatibility
-* Versioned base path (e.g., /v1) MUST remain backward compatible; breaking changes require a new version.
 * Additive schema changes (new JSON fields) MUST NOT break clients; clients are expected to ignore unknown fields.
-* Field removal or semantic change → new version (e.g., /v2) with deprecation notice for prior version.
 
 ## 9. API Evolution
 * Deprecations MUST follow: announce → telemetry usage monitoring → grace period → removal in next major version.
@@ -67,7 +56,7 @@ Individual service specs may only tighten (never relax) these requirements unles
 * Ordering / ranking keys MUST use deterministic binary collation to guarantee consistent sorting.
 
 ## 11. Error Handling
-* Error responses MUST follow: { "error": { "code": "<snake_case>", "message": "human readable", "details": { ... }? } }.
+* Error responses MUST follow Problem semantic (RFC7807)
 * HTTP status codes MUST align with semantics (400 validation shape errors, 401 auth, 403 forbidden, 404 not found, 409 conflict, 412 precondition, 422 domain validation, 429 rate limit, 500/502/503 server).
 * Internal stack traces MUST NOT be returned to clients (log only).
 * Retry guidance MUST be consistent: idempotent 5xx & network errors → exponential backoff + jitter; 429 → honor Retry-After; 409/412 → refetch & retry.
@@ -75,19 +64,15 @@ Individual service specs may only tighten (never relax) these requirements unles
 ## 12. UX Quality
 * API responses MUST be deterministic for identical inputs (idempotent reads).
 * List ordering MUST be stable (explicit tie-breakers).
-* Clients MUST tolerate additional JSON fields.
 * Long-running (>250 ms perceived) client actions SHOULD surface progress indicators.
 * Accessibility: keyboard alternatives MUST exist for pointer-only interactions (e.g., drag & drop).
 
 ## 13. Limits, Quotas & Protection
-* Each service MUST define: max request body (default 1 MiB), per-identity rate limit, optional per-IP rate limit, soft/hard object limits.
-* Exceeding limits MUST return: 413 (body too large), 429 (rate), or 422 (domain object soft limit).
 * Rate-limited responses MUST include: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset.
 * Abuse protections SHOULD include: input validation allowlists, anomaly detection, WAF rules.
 * Pagination MUST default to bounded page sizes with enforced maximum.
 
 ## 14. Operability & Support
-* Mandatory endpoints: /status/health (liveness), /status/ready (readiness), /status/version (build/ref tracking).
 * Each service MUST maintain runbooks for: high latency, partial dependency outage, elevated error rate, rate-limit tuning, rollback.
 * Migrations MUST be reversible or have a documented rollback strategy.
 * Feature flags MAY control progressive rollout; a kill-switch SHOULD exist for risky features.
