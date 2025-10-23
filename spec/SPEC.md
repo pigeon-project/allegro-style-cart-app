@@ -716,3 +716,71 @@ The Cart repository provides **stateless** cart operations - it does NOT persist
 - Repository implementation is package-private
 - Only CartRepository interface is public in api package
 - Follows established patterns from products and issues modules
+
+### 11.5 Cart REST API
+
+The Cart REST API is implemented in the `com.github.pigeon.cart.web` package:
+
+**Endpoints:**
+- `POST /api/carts/{cartId}/items` - Adds an item to the cart
+  - Request body: `{productId: string, quantity: number, currentItems?: [{productId, quantity}]}`
+  - Returns 200 OK with QuoteResponse containing all items and totals
+  - Returns 400 Bad Request for invalid product ID or quantity
+  - Returns 404 Not Found if product doesn't exist
+  - Stateless operation: frontend sends current cart state + item to add
+- `PATCH /api/carts/{cartId}/items/{itemId}` - Updates an item's quantity
+  - Request body: `{quantity: number, currentItems: [{itemId, productId, quantity}]}`
+  - Returns 200 OK with QuoteResponse containing all items and totals
+  - Returns 400 Bad Request if item not found in cart or invalid quantity
+  - Returns 404 Not Found if product doesn't exist
+  - Stateless operation: frontend sends current cart state with updated quantity
+- `DELETE /api/carts/{cartId}/items/{itemId}` - Removes an item from the cart
+  - Request body: `{currentItems: [{itemId, productId, quantity}]}`
+  - Returns 200 OK with QuoteResponse containing remaining items and totals
+  - Returns 400 Bad Request if item not found in cart
+  - Stateless operation: frontend sends current cart state, item is filtered out
+- `POST /api/carts/{cartId}/quote` - Calculates a quote for the cart
+  - Request body: `{cartId: string, items: [{productId, quantity}]}`
+  - Returns 200 OK with QuoteResponse with validated prices and availability
+  - Returns 400 Bad Request for invalid cart state or items
+  - Returns 404 Not Found if product doesn't exist
+  - Stateless operation: validates prices against current product catalog
+
+**Request DTOs:**
+- `AddItemRequest` - Contains productId, quantity, and optional currentItems
+- `UpdateItemRequest` - Contains new quantity and currentItems array
+- `RemoveItemRequest` - Contains currentItems array (item removed by itemId from path)
+
+**OpenAPI Documentation:**
+- Full OpenAPI 3.0 annotations on all endpoints
+- Available at `/api-docs` (JSON)
+- Swagger UI available at `/swagger-ui.html`
+- Includes detailed parameter descriptions, request/response schemas, and error responses
+
+**Error Handling:**
+- RFC 7807 Problem Detail format for all errors
+- Global exception handler in `com.github.pigeon.web.GlobalExceptionHandler`
+- HTTP status codes: 400 (Bad Request), 404 (Not Found)
+- Structured error responses with type, title, status, and detail
+
+**Stateless Design:**
+All cart endpoints are stateless - the backend does not persist cart state between requests. The frontend maintains cart state and sends it with each mutation request. This design:
+- Eliminates need for cart persistence layer
+- Simplifies backend implementation
+- Provides price drift detection (prices always validated against current catalog)
+- Ensures availability checks are current
+- Supports horizontal scaling without shared state
+
+**Performance:**
+- p95 latency target: ≤250ms for mutation operations (add, update, remove)
+- p95 latency target: ≤150ms for quote operations
+- All cart operations use existing CartRepository.calculateQuote
+- Product queries are batch-optimized to avoid N+1 problems
+- Virtual threads enabled for improved concurrency
+
+**Testing:**
+- 11 comprehensive unit tests with MockMvc in CartControllerTest
+- 3 performance characterization tests in CartControllerPerformanceTest
+- Tests cover all endpoints, error scenarios, and edge cases
+- All tests passing with 100% success rate
+- Performance tests verify latency targets in test environment
