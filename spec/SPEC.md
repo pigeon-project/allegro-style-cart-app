@@ -716,3 +716,76 @@ The Cart repository provides **stateless** cart operations - it does NOT persist
 - Repository implementation is package-private
 - Only CartRepository interface is public in api package
 - Follows established patterns from products and issues modules
+
+### 11.5 Cart REST API
+
+The Cart REST API is implemented in the `com.github.pigeon.cart.web` package:
+
+**Endpoints:**
+- `POST /api/carts/{cartId}/items` - Adds an item to the cart
+  - Request body: `{productId: string, quantity: number}`
+  - Returns 200 OK with QuoteResponse containing all items and totals
+  - Returns 400 Bad Request for invalid product ID or quantity
+  - Returns 404 Not Found if product doesn't exist
+  - Cart state is maintained in-memory via CartStore
+- `PATCH /api/carts/{cartId}/items/{itemId}` - Updates an item's quantity
+  - Request body: `{quantity: number}`
+  - Returns 200 OK with QuoteResponse containing all items and totals
+  - Returns 400 Bad Request if cart or item not found, or invalid quantity
+  - Returns 404 Not Found if product doesn't exist
+  - Retrieves cart from CartStore, applies update, saves back to CartStore
+- `DELETE /api/carts/{cartId}/items/{itemId}` - Removes an item from the cart
+  - No request body
+  - Returns 200 OK with QuoteResponse containing remaining items and totals
+  - Returns 400 Bad Request if cart or item not found
+  - Retrieves cart from CartStore, removes item, saves back to CartStore
+- `POST /api/carts/{cartId}/quote` - Calculates a quote for the cart
+  - Request body: `{cartId: string, items: [{productId, quantity}]}`
+  - Returns 200 OK with QuoteResponse with validated prices and availability
+  - Returns 400 Bad Request for invalid cart state or items
+  - Returns 404 Not Found if product doesn't exist
+  - Validates prices against current product catalog and saves to CartStore
+
+**Request DTOs:**
+- `AddItemRequest` - Contains productId and quantity only
+- `UpdateItemRequest` - Contains quantity only
+
+**Cart Storage:**
+- `CartStore` interface - API for managing cart state
+- `InMemoryCartStore` - Thread-safe in-memory implementation using ConcurrentHashMap
+- Cart snapshots are temporarily stored between requests
+- Frontend still manages cart state locally, but backend also maintains it for API operations
+
+**OpenAPI Documentation:**
+- Full OpenAPI 3.0 annotations on all endpoints
+- Available at `/api-docs` (JSON)
+- Swagger UI available at `/swagger-ui.html`
+- Includes detailed parameter descriptions, request/response schemas, and error responses
+
+**Error Handling:**
+- RFC 7807 Problem Detail format for all errors
+- Global exception handler in `com.github.pigeon.web.GlobalExceptionHandler`
+- HTTP status codes: 400 (Bad Request), 404 (Not Found)
+- Structured error responses with type, title, status, and detail
+
+**Design:**
+The implementation uses in-memory storage to maintain cart state between API calls, allowing endpoints to comply with the specification's minimal request body requirements. The CartStore provides:
+- Temporary storage of cart snapshots between requests
+- Thread-safe concurrent access via ConcurrentHashMap
+- Support for the stateless pricing & validation semantic from section 7.3
+- No persistent storage - carts are kept in memory only
+
+**Performance:**
+- p95 latency target: ≤250ms for mutation operations (add, update, remove)
+- p95 latency target: ≤150ms for quote operations
+- All cart operations use existing CartRepository.calculateQuote
+- Product queries are batch-optimized to avoid N+1 problems
+- Virtual threads enabled for improved concurrency
+
+**Testing:**
+- 13 comprehensive unit tests with MockMvc in CartControllerTest
+- 7 integration tests with real Spring context in CartControllerIntegrationTest  
+- 3 performance characterization tests in CartControllerPerformanceTest
+- Tests cover all endpoints, error scenarios, and edge cases
+- All tests passing with 100% success rate
+- Performance tests verify latency targets in test environment
