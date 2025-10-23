@@ -13,6 +13,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -39,13 +40,18 @@ class CartControllerTest {
 
     @MockitoBean
     CartRepository cartRepository;
+    
+    @MockitoBean
+    CartStore cartStore;
 
     @Test
     @WithMockUser(value = "test.user")
-    @DisplayName("Should add item to cart")
-    void shouldAddItemToCart() throws Exception {
+    @DisplayName("Should add item to empty cart")
+    void shouldAddItemToEmptyCart() throws Exception {
         // Given
-        AddItemRequest request = new AddItemRequest("prod-1", 2, List.of());
+        AddItemRequest request = new AddItemRequest("prod-1", 2);
+        
+        when(cartStore.getCart("cart-123")).thenReturn(Optional.empty());
         
         QuoteResponse response = new QuoteResponse(
             "cart-123",
@@ -79,8 +85,14 @@ class CartControllerTest {
     @DisplayName("Should add item to existing cart")
     void shouldAddItemToExistingCart() throws Exception {
         // Given - cart already has one item
-        QuoteRequest.QuoteItem existingItem = new QuoteRequest.QuoteItem("prod-1", 1);
-        AddItemRequest request = new AddItemRequest("prod-2", 3, List.of(existingItem));
+        CartSnapshot existingCart = new CartSnapshot(
+            "cart-123",
+            List.of(new CartItem("item-1", "prod-1", 1, new Money(10000, "PLN"), null)),
+            new CartComputed(new Money(10000, "PLN"), new Money(0, "PLN"), new Money(10000, "PLN"))
+        );
+        when(cartStore.getCart("cart-123")).thenReturn(Optional.of(existingCart));
+        
+        AddItemRequest request = new AddItemRequest("prod-2", 3);
         
         QuoteResponse response = new QuoteResponse(
             "cart-123",
@@ -110,10 +122,11 @@ class CartControllerTest {
     @DisplayName("Should return 400 when adding item with invalid product id")
     void shouldReturn400WhenAddingInvalidProduct() throws Exception {
         // Given
+        when(cartStore.getCart("cart-123")).thenReturn(Optional.empty());
         when(cartRepository.calculateQuote(any(QuoteRequest.class)))
             .thenThrow(new IllegalArgumentException("Product not found: invalid-prod"));
         
-        AddItemRequest request = new AddItemRequest("invalid-prod", 1, List.of());
+        AddItemRequest request = new AddItemRequest("invalid-prod", 1);
         
         // When & Then
         mockMvc.perform(post("/api/carts/cart-123/items").with(csrf())
@@ -130,8 +143,14 @@ class CartControllerTest {
     @DisplayName("Should update item quantity")
     void shouldUpdateItemQuantity() throws Exception {
         // Given
-        CartItem existingItem = new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null);
-        UpdateItemRequest request = new UpdateItemRequest(5, List.of(existingItem));
+        CartSnapshot existingCart = new CartSnapshot(
+            "cart-123",
+            List.of(new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null)),
+            new CartComputed(new Money(20000, "PLN"), new Money(0, "PLN"), new Money(20000, "PLN"))
+        );
+        when(cartStore.getCart("cart-123")).thenReturn(Optional.of(existingCart));
+        
+        UpdateItemRequest request = new UpdateItemRequest(5);
         
         QuoteResponse response = new QuoteResponse(
             "cart-123",
@@ -161,8 +180,14 @@ class CartControllerTest {
     @DisplayName("Should return 400 when updating non-existent item")
     void shouldReturn400WhenUpdatingNonExistentItem() throws Exception {
         // Given
-        CartItem existingItem = new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null);
-        UpdateItemRequest request = new UpdateItemRequest(5, List.of(existingItem));
+        CartSnapshot existingCart = new CartSnapshot(
+            "cart-123",
+            List.of(new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null)),
+            new CartComputed(new Money(20000, "PLN"), new Money(0, "PLN"), new Money(20000, "PLN"))
+        );
+        when(cartStore.getCart("cart-123")).thenReturn(Optional.of(existingCart));
+        
+        UpdateItemRequest request = new UpdateItemRequest(5);
         
         // When & Then - trying to update item-999 which doesn't exist
         mockMvc.perform(patch("/api/carts/cart-123/items/item-999").with(csrf())
@@ -171,15 +196,38 @@ class CartControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("Item not found in cart: item-999"));
     }
+    
+    @Test
+    @WithMockUser(value = "test.user")
+    @DisplayName("Should return 400 when cart not found for update")
+    void shouldReturn400WhenCartNotFoundForUpdate() throws Exception {
+        // Given
+        when(cartStore.getCart("non-existent-cart")).thenReturn(Optional.empty());
+        
+        UpdateItemRequest request = new UpdateItemRequest(5);
+        
+        // When & Then
+        mockMvc.perform(patch("/api/carts/non-existent-cart/items/item-1").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Cart not found: non-existent-cart"));
+    }
 
     @Test
     @WithMockUser(value = "test.user")
     @DisplayName("Should remove item from cart")
     void shouldRemoveItemFromCart() throws Exception {
         // Given - cart has two items
-        CartItem item1 = new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null);
-        CartItem item2 = new CartItem("item-2", "prod-2", 1, new Money(5000, "PLN"), null);
-        RemoveItemRequest request = new RemoveItemRequest(List.of(item1, item2));
+        CartSnapshot existingCart = new CartSnapshot(
+            "cart-123",
+            List.of(
+                new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null),
+                new CartItem("item-2", "prod-2", 1, new Money(5000, "PLN"), null)
+            ),
+            new CartComputed(new Money(25000, "PLN"), new Money(0, "PLN"), new Money(25000, "PLN"))
+        );
+        when(cartStore.getCart("cart-123")).thenReturn(Optional.of(existingCart));
         
         // Response should have only item-2
         QuoteResponse response = new QuoteResponse(
@@ -197,9 +245,7 @@ class CartControllerTest {
         when(cartRepository.calculateQuote(any(QuoteRequest.class))).thenReturn(response);
         
         // When & Then - removing item-1
-        mockMvc.perform(delete("/api/carts/cart-123/items/item-1").with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(delete("/api/carts/cart-123/items/item-1").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].itemId").value("item-2"));
@@ -210,26 +256,15 @@ class CartControllerTest {
     @DisplayName("Should return empty cart when removing last item")
     void shouldReturnEmptyCartWhenRemovingLastItem() throws Exception {
         // Given - cart has one item
-        CartItem item = new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null);
-        RemoveItemRequest request = new RemoveItemRequest(List.of(item));
-        
-        // Response should be empty cart
-        QuoteResponse response = new QuoteResponse(
+        CartSnapshot existingCart = new CartSnapshot(
             "cart-123",
-            List.of(),
-            new CartComputed(
-                new Money(0, "PLN"),
-                new Money(0, "PLN"),
-                new Money(0, "PLN")
-            )
+            List.of(new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null)),
+            new CartComputed(new Money(20000, "PLN"), new Money(0, "PLN"), new Money(20000, "PLN"))
         );
-        
-        when(cartRepository.calculateQuote(any(QuoteRequest.class))).thenReturn(response);
+        when(cartStore.getCart("cart-123")).thenReturn(Optional.of(existingCart));
         
         // When & Then
-        mockMvc.perform(delete("/api/carts/cart-123/items/item-1").with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(delete("/api/carts/cart-123/items/item-1").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(0))
                 .andExpect(jsonPath("$.computed.total.amount").value(0));
@@ -240,13 +275,15 @@ class CartControllerTest {
     @DisplayName("Should return 400 when removing non-existent item")
     void shouldReturn400WhenRemovingNonExistentItem() throws Exception {
         // Given
-        CartItem item = new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null);
-        RemoveItemRequest request = new RemoveItemRequest(List.of(item));
+        CartSnapshot existingCart = new CartSnapshot(
+            "cart-123",
+            List.of(new CartItem("item-1", "prod-1", 2, new Money(10000, "PLN"), null)),
+            new CartComputed(new Money(20000, "PLN"), new Money(0, "PLN"), new Money(20000, "PLN"))
+        );
+        when(cartStore.getCart("cart-123")).thenReturn(Optional.of(existingCart));
         
         // When & Then - trying to remove item-999 which doesn't exist
-        mockMvc.perform(delete("/api/carts/cart-123/items/item-999").with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(delete("/api/carts/cart-123/items/item-999").with(csrf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("Item not found in cart: item-999"));
     }

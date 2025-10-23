@@ -1,21 +1,15 @@
 package com.github.pigeon.cart.web;
 
-import com.github.pigeon.cart.api.QuoteRequest;
-
-import java.util.List;
-
 /**
  * Request to add an item to the cart.
- * Contains the item to add and the current cart state.
+ * Complies with API specification: body contains only productId and quantity.
  * 
- * @param productId    Product identifier to add
- * @param quantity     Quantity to add
- * @param currentItems Current items in the cart (optional, can be empty)
+ * @param productId Product identifier to add
+ * @param quantity  Quantity to add
  */
 record AddItemRequest(
         String productId,
-        int quantity,
-        List<QuoteRequest.QuoteItem> currentItems
+        int quantity
 ) {
     
     AddItemRequest {
@@ -24,9 +18,6 @@ record AddItemRequest(
         }
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be positive");
-        }
-        if (currentItems == null) {
-            currentItems = List.of();
         }
     }
 }

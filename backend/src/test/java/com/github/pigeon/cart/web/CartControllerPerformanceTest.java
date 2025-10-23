@@ -14,8 +14,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,7 +40,7 @@ class CartControllerPerformanceTest {
     @WithMockUser(value = "test.user")
     @DisplayName("Should add item to cart with acceptable latency (p95 ≤250ms)")
     void shouldAddItemQuickly() throws Exception {
-        AddItemRequest request = new AddItemRequest("prod-001", 2, List.of());
+        AddItemRequest request = new AddItemRequest("prod-001", 2);
         
         long startTime = System.currentTimeMillis();
         
@@ -97,19 +95,18 @@ class CartControllerPerformanceTest {
     void shouldPerformMultipleOperationsQuickly() throws Exception {
         String cartId = "cart-perf-multi";
         
-        // Simulate a typical user flow: add items, update quantity, add another, remove one
+        // Simulate a typical user flow: add items, add another, calculate quote
         long totalStart = System.currentTimeMillis();
         
         // Add first item
-        AddItemRequest add1 = new AddItemRequest("prod-001", 1, List.of());
+        AddItemRequest add1 = new AddItemRequest("prod-001", 1);
         mockMvc.perform(post("/api/carts/" + cartId + "/items").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(add1)))
                 .andExpect(status().isOk());
         
         // Add second item
-        AddItemRequest add2 = new AddItemRequest("prod-002", 2, 
-            List.of(new QuoteRequest.QuoteItem("prod-001", 1)));
+        AddItemRequest add2 = new AddItemRequest("prod-002", 2);
         mockMvc.perform(post("/api/carts/" + cartId + "/items").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(add2)))

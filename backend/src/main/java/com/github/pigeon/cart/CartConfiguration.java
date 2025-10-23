@@ -12,4 +12,9 @@ class CartConfiguration {
     CartRepository cartRepository(ProductRepository productRepository) {
         return new CartRepositoryImpl(productRepository);
     }
+    
+    @Bean
+    com.github.pigeon.cart.api.CartStore cartStore() {
+        return new InMemoryCartStore();
+    }
 }

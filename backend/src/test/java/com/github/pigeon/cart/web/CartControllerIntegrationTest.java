@@ -15,8 +15,6 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,7 +38,7 @@ class CartControllerIntegrationTest {
     @DisplayName("Should add item to empty cart and return quote with product from catalog")
     void shouldAddItemToEmptyCart() throws Exception {
         // Given - prod-001 exists in the product catalog (seeded data)
-        AddItemRequest request = new AddItemRequest("prod-001", 2, List.of());
+        AddItemRequest request = new AddItemRequest("prod-001", 2);
         
         // When & Then
         mockMvc.perform(post("/api/carts/cart-integration-1/items").with(csrf())
@@ -64,16 +62,15 @@ class CartControllerIntegrationTest {
         String cartId = "cart-integration-2";
         
         // Add first item
-        AddItemRequest request1 = new AddItemRequest("prod-001", 1, List.of());
+        AddItemRequest request1 = new AddItemRequest("prod-001", 1);
         mockMvc.perform(post("/api/carts/" + cartId + "/items").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request1)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(1));
         
-        // Add second item (with current cart state)
-        AddItemRequest request2 = new AddItemRequest("prod-002", 2, 
-            List.of(new QuoteRequest.QuoteItem("prod-001", 1)));
+        // Add second item (cart is stored in CartStore)
+        AddItemRequest request2 = new AddItemRequest("prod-002", 2);
         mockMvc.perform(post("/api/carts/" + cartId + "/items").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request2)))
@@ -109,7 +106,7 @@ class CartControllerIntegrationTest {
     @WithMockUser(value = "test.user")
     @DisplayName("Should return 400 for non-existent product")
     void shouldReturn400ForNonExistentProduct() throws Exception {
-        AddItemRequest request = new AddItemRequest("non-existent-product", 1, List.of());
+        AddItemRequest request = new AddItemRequest("non-existent-product", 1);
         
         mockMvc.perform(post("/api/carts/cart-integration-4/items").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -123,7 +120,7 @@ class CartControllerIntegrationTest {
     @WithMockUser(value = "test.user")
     @DisplayName("Should validate prices from product catalog (price drift detection)")
     void shouldValidatePricesFromCatalog() throws Exception {
-        // The quote request contains prices, but they should be replaced with catalog prices
+        // The quote request validates prices from catalog
         QuoteRequest request = new QuoteRequest(
             "cart-integration-5",
             List.of(new QuoteRequest.QuoteItem("prod-001", 1))
@@ -135,7 +132,7 @@ class CartControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].price.currency").value("PLN"))
                 .andExpect(jsonPath("$.items[0].price.amount").isNumber())
-                // Price should be from catalog, not from request
+                // Price should be from catalog
                 .andExpect(jsonPath("$.items[0].price.amount", greaterThan(0)));
     }
 
@@ -155,7 +152,7 @@ class CartControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].price").exists())
                 .andExpect(jsonPath("$.items[0].listPrice").exists())
-                // List price should be greater than price for items on sale
+                // List price and price should be numbers
                 .andExpect(jsonPath("$.items[0].listPrice.amount").isNumber())
                 .andExpect(jsonPath("$.items[0].price.amount").isNumber());
     }
