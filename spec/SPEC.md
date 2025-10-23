@@ -565,3 +565,39 @@ The Product domain is implemented in the `com.github.pigeon.products` package fo
 - Only facade classes (Commands/Queries) are public
 - Repository implementations are package-private
 - Follows established patterns from the issues module
+
+### 11.2 Product REST API
+
+The Product REST API is implemented in the `com.github.pigeon.products.web` package:
+
+**Endpoints:**
+- `GET /api/products/{id}` - Retrieves a single product by ID
+  - Returns 200 OK with Product object if found
+  - Returns 404 Not Found if product doesn't exist
+- `GET /api/products?ids=...` - Retrieves multiple products by IDs (batch query)
+  - Returns 200 OK with array of Product objects
+  - Returns empty array if no products found
+  - Optimized to avoid N+1 queries using batch fetch
+
+**OpenAPI Documentation:**
+- Full OpenAPI 3.0 annotations on all endpoints
+- Available at `/api-docs` (JSON)
+- Swagger UI available at `/swagger-ui.html`
+- Includes detailed parameter descriptions and response schemas
+
+**Error Handling:**
+- RFC 7807 Problem Detail format for all errors
+- Global exception handler in `com.github.pigeon.web.GlobalExceptionHandler`
+- Returns structured error responses with:
+  - `type` - URI identifying the problem type
+  - `title` - Human-readable error summary
+  - `status` - HTTP status code
+  - `detail` - Detailed error message
+- Handles IllegalArgumentException (400 Bad Request)
+- Generic exception handling for unexpected errors (500 Internal Server Error)
+
+**Performance:**
+- p95 latency target: ≤150ms for read operations
+- Batch query endpoint optimized with single database query
+- Lazy initialization enabled to reduce startup time
+- JPA open-in-view disabled to prevent lazy loading issues
