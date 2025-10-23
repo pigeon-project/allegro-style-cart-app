@@ -878,3 +878,133 @@ The implementation uses in-memory storage to maintain cart state between API cal
 - Tests cover all endpoints, error scenarios, and edge cases
 - All tests passing with 100% success rate
 - Performance tests verify latency targets in test environment
+
+### 11.7 Observability and Metrics
+
+The application implements comprehensive observability following SHARED-NFR.md requirements for monitoring, logging, and metrics collection.
+
+#### Structured JSON Logging
+
+**Configuration:**
+- Logback with Logstash encoder for structured JSON logging
+- JSON format enabled in production profile (prod, production)
+- Human-readable format in development for easier debugging
+- Configuration in `logback-spring.xml`
+
+**Log Fields (SHARED-NFR compliant):**
+- `timestamp` - ISO-8601 format in UTC
+- `level` - Log level (INFO, WARN, ERROR, DEBUG)
+- `service` - Service name: "allegro-style-cart-app"
+- `environment` - Active Spring profile (dev, prod, etc.)
+- `requestId` - Correlation ID for request tracing
+- `correlationId` - Same as requestId for cross-service tracing
+- `route` - HTTP method and URI path (e.g., "GET /api/products/prod-001")
+- `durationMs` - Request duration in milliseconds
+- `status` - HTTP status code
+- `errorCode` - Error code for 4xx/5xx responses (e.g., "NOT_FOUND", "RATE_LIMIT_EXCEEDED")
+
+**Implementation:**
+- `RequestLoggingFilter` - Captures HTTP request/response details and adds to MDC
+- Logs INFO for successful requests (2xx/3xx)
+- Logs WARN for client errors (4xx)
+- Logs ERROR for server errors (5xx)
+- All fields added to MDC (Mapped Diagnostic Context) for thread-safe logging
+
+#### Correlation ID Tracking
+
+**Implementation:**
+- `RequestCorrelationFilter` - Ensures every request has a correlation ID
+- Correlation ID from `X-Correlation-ID` header if provided
+- Auto-generated UUID if not provided
+- Added to all response headers as `X-Correlation-ID`
+- Available in MDC as both `correlationId` and `requestId`
+- Cleaned up after request to prevent memory leaks
+
+**Benefits:**
+- End-to-end request tracing across distributed systems
+- Correlate logs from multiple services for the same request
+- Debug production issues by following request flow
+- Client can provide correlation ID for troubleshooting
+
+#### Metrics and Monitoring
+
+**Spring Boot Actuator:**
+- Enabled management endpoints:
+  - `/actuator/health` - Health check with readiness/liveness probes
+  - `/actuator/info` - Application information
+  - `/actuator/metrics` - Metrics registry
+  - `/actuator/prometheus` - Prometheus-formatted metrics
+- Health details shown when authorized
+- Base path: `/actuator`
+
+**Micrometer Metrics:**
+- HTTP server request metrics for all endpoints
+- Latency histograms with percentiles: p50, p90, p95, p99
+- SLO buckets: 50ms, 100ms, 150ms, 200ms, 250ms, 300ms, 400ms, 500ms, 1s
+- Per-endpoint metrics published automatically
+- Error rate tracking by status code class (4xx, 5xx)
+
+**Core Metrics (SHARED-NFR compliant):**
+- **RPS** (Requests Per Second) - `http.server.requests` count metric
+- **Latency Histograms** - p50/p90/p95/p99 percentiles enabled
+- **Error Rate** - 4xx and 5xx responses tracked separately
+- **Saturation** - JVM metrics (CPU, memory, threads)
+- **System Metrics** - Process and system resource usage
+- **Logback Metrics** - Log event tracking
+
+**Metric Tags:**
+- `application` - Application name
+- `environment` - Active profile
+- `uri` - Request URI template
+- `method` - HTTP method
+- `status` - HTTP status code
+- `exception` - Exception class name (if applicable)
+
+**Prometheus Export:**
+- Enabled for Prometheus scraping
+- Metrics exposed at `/actuator/prometheus`
+- Histogram data in Prometheus format
+- Compatible with Grafana dashboards
+
+#### Testing
+
+**Observability Tests:**
+- `RequestCorrelationFilterTest` - Tests correlation ID generation and propagation
+  - Generates UUID when not provided
+  - Preserves correlation ID when provided
+  - Handles empty/blank correlation IDs
+  - Includes correlation ID in error responses
+- `ActuatorEndpointsTest` - Tests actuator endpoint availability
+  - Health endpoint accessible
+  - Metrics endpoint accessible
+  - Prometheus endpoint accessible
+  - Info endpoint accessible
+  - HTTP server requests metrics published
+
+**Test Coverage:**
+- 9 new tests for observability features
+- All tests passing
+- Integration tests verify metrics collection
+- Correlation ID propagation tested end-to-end
+
+#### Monitoring Best Practices
+
+**Alerting (planned):**
+- Elevated 5xx error rate (> 1% of requests)
+- p95/p99 latency SLO breach (p95 > 250ms for writes, > 150ms for reads)
+- Abnormal 429 rate limit surge
+- Error budget burn rate
+- Health check failures
+
+**Dashboards (planned):**
+- Request rate by endpoint
+- Latency percentiles by endpoint
+- Error rate by status code
+- Resource utilization (CPU, memory, threads)
+- JVM metrics (heap, GC, class loading)
+
+**Log Aggregation:**
+- Structured JSON logs ready for log aggregation systems
+- Correlation IDs enable distributed tracing
+- All required fields present per SHARED-NFR
+- No PII in logs (only product IDs, cart IDs, user IDs)
