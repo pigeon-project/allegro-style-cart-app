@@ -17,6 +17,8 @@ dependencies {
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.data.jdbc)
     implementation(libs.bucket4j.core)
+    implementation(libs.logstash.logback.encoder)
+    implementation(libs.micrometer.registry.prometheus)
 
     runtimeOnly(libs.h2)
     testRuntimeOnly(libs.junit.platform.launcher)
