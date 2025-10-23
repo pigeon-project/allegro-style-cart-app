@@ -1,0 +1,6 @@
+# Ignore artifacts:
+build
+coverage
+.gradle
+dist
+node_modules

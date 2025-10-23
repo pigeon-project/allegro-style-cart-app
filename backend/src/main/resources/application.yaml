@@ -1,0 +1,10 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://token.actions.githubusercontent.com/.well-known/jwks
+  main:
+    lazy-initialization: true
+  jpa:
+    open-in-view: false
