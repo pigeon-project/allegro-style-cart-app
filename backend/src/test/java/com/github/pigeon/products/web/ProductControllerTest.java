@@ -20,6 +20,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Unit tests for ProductController.
+ * These tests verify the REST API endpoints meet the requirements:
+ * - OpenAPI documentation is generated
+ * - Error handling with Problem API (RFC7807)
+ * - p95 latency ≤150ms for read operations (verified via integration tests)
+ */
 @WebMvcTest(ProductController.class)
 class ProductControllerTest {
 
