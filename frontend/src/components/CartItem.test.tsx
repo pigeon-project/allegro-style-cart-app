@@ -1,5 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  render,
+  screen,
+  waitFor,
+  cleanup,
+  fireEvent,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CartItem from "./CartItem";
 import type { CartItem as CartItemType, Product } from "../api-types";
@@ -33,6 +39,10 @@ describe("CartItem", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("renders cart item with all required fields", () => {
@@ -198,8 +208,6 @@ describe("CartItem", () => {
   });
 
   it("allows manual quantity input", async () => {
-    const user = userEvent.setup();
-
     render(
       <CartItem
         item={mockCartItem}
@@ -209,9 +217,12 @@ describe("CartItem", () => {
       />,
     );
 
-    const quantityInput = screen.getByTestId("quantity-input");
-    await user.clear(quantityInput);
-    await user.type(quantityInput, "5");
+    const quantityInput = screen.getByTestId(
+      "quantity-input",
+    ) as HTMLInputElement;
+
+    // Simulate user typing a valid value
+    fireEvent.change(quantityInput, { target: { value: "5" } });
 
     await waitFor(() => {
       expect(mockOnQuantityChange).toHaveBeenCalledWith("item-001", 5);
@@ -219,8 +230,6 @@ describe("CartItem", () => {
   });
 
   it("clips manual input to min quantity", async () => {
-    const user = userEvent.setup();
-
     render(
       <CartItem
         item={mockCartItem}
@@ -230,9 +239,12 @@ describe("CartItem", () => {
       />,
     );
 
-    const quantityInput = screen.getByTestId("quantity-input");
-    await user.clear(quantityInput);
-    await user.type(quantityInput, "0");
+    const quantityInput = screen.getByTestId(
+      "quantity-input",
+    ) as HTMLInputElement;
+
+    // Simulate user typing a value below minimum
+    fireEvent.change(quantityInput, { target: { value: "0" } });
 
     await waitFor(() => {
       expect(mockOnQuantityChange).toHaveBeenCalledWith("item-001", 1);
@@ -240,8 +252,6 @@ describe("CartItem", () => {
   });
 
   it("clips manual input to max quantity", async () => {
-    const user = userEvent.setup();
-
     render(
       <CartItem
         item={mockCartItem}
@@ -251,9 +261,12 @@ describe("CartItem", () => {
       />,
     );
 
-    const quantityInput = screen.getByTestId("quantity-input");
-    await user.clear(quantityInput);
-    await user.type(quantityInput, "100");
+    const quantityInput = screen.getByTestId(
+      "quantity-input",
+    ) as HTMLInputElement;
+
+    // Simulate user typing a value above maximum
+    fireEvent.change(quantityInput, { target: { value: "100" } });
 
     await waitFor(() => {
       expect(mockOnQuantityChange).toHaveBeenCalledWith("item-001", 10);
