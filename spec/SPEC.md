@@ -517,3 +517,33 @@ HTTP semantics: 400/401/403/404/409/412/422/429/5xx per shared NFR.
 3. Removing an item updates grouping; empty state appears when last item removed.
 4. Carousel adds items; totals update; keyboard navigation passes.
 6. All endpoints meet tightened performance and error semantics.
+
+## 11. Backend Implementation Details
+
+### 11.1 Product Domain
+
+The Product domain is implemented in the `com.github.pigeon.products` package following a feature-based layout:
+
+**Package Structure:**
+- `products/api/` - Public domain models and interfaces
+  - `Product` - Record representing a product with all fields (id, sellerId, sellerName, title, imageUrl, attributes, price, listPrice, currency, availability, minQty, maxQty)
+  - `Money` - Record for monetary values (amount in grosze, currency)
+  - `Availability` - Record for product availability (inStock, maxOrderable)
+  - `ProductRepository` - Interface for product data access
+- `products/` - Internal implementation
+  - `ProductQueries` - Public facade for read operations
+  - `ProductCommands` - Public facade for write operations
+  - `ProductConfiguration` - Spring configuration (package-private)
+
+**Domain Validation:**
+- Product fields are validated in record constructors
+- Money amounts must be non-negative and in PLN currency
+- Availability maxOrderable must be non-negative
+- Product quantity constraints: minQty and maxQty must be positive, minQty ≤ maxQty
+- All required fields validated as non-null and non-blank
+
+**Architecture Compliance:**
+- Configuration classes are package-private
+- Only facade classes (Commands/Queries) are public
+- Repository implementations will be package-private
+- Follows established patterns from the issues module
