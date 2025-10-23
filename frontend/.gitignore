@@ -29,4 +29,3 @@ dist-ssr
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
-routeTree.gen.ts
