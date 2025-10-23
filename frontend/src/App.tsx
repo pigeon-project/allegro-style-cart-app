@@ -36,13 +36,7 @@ export default function App() {
   });
 
   return (
-    <div
-      className="min-h-screen p-6 flex items-center justify-center"
-      style={{
-        backgroundColor: "var(--m-color-desk)",
-        color: "var(--m-color-text)",
-      }}
-    >
+    <div className="min-h-screen p-6 flex items-center justify-center bg-background text-text">
       <div className="w-full max-w-xl">
         <header className="text-center mb-10">
           <div className="flex items-center justify-center gap-6 mb-4">
@@ -50,11 +44,7 @@ export default function App() {
               href="https://vite.dev"
               target="_blank"
               rel="noreferrer"
-              className="rounded-xl p-3 border shadow-inner"
-              style={{
-                backgroundColor: "var(--m-color-card)",
-                borderColor: "var(--m-color-border)",
-              }}
+              className="rounded-xl p-3 border bg-surface border-border shadow-inner"
             >
               <img src={viteLogo} alt="Vite logo" className="h-12 w-12" />
             </a>
@@ -62,11 +52,7 @@ export default function App() {
               href="https://react.dev"
               target="_blank"
               rel="noreferrer"
-              className="rounded-xl p-3 border shadow-inner"
-              style={{
-                backgroundColor: "var(--m-color-card)",
-                borderColor: "var(--m-color-border)",
-              }}
+              className="rounded-xl p-3 border bg-surface border-border shadow-inner"
             >
               <img src={reactLogo} alt="React logo" className="h-12 w-12" />
             </a>
@@ -74,79 +60,39 @@ export default function App() {
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">
             Allegro Design System Demo
           </h1>
-          <p style={{ color: "var(--m-color-text-secondary)" }}>
-            Theme: {mode} mode
-          </p>
+          <p className="text-text-secondary">Theme: {mode} mode</p>
           <button
             onClick={toggleMode}
-            className="mt-3 px-4 py-2 rounded font-medium"
-            style={{
-              backgroundColor: "var(--m-color-primary)",
-              color: "var(--m-color-accent-on-primary)",
-            }}
+            className="mt-3 px-4 py-2 rounded font-medium bg-primary text-white"
           >
             Toggle Theme
           </button>
         </header>
         <main>
-          <div
-            className="border rounded-2xl shadow-xl backdrop-blur p-6 sm:p-8"
-            style={{
-              backgroundColor: "var(--m-color-card)",
-              borderColor: "var(--m-color-border)",
-            }}
-          >
+          <div className="border rounded-2xl shadow-xl backdrop-blur p-6 sm:p-8 bg-surface border-border">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p style={{ color: "var(--m-color-text-secondary)" }}>
-                  You clicked the button:
-                </p>
-                <p
-                  className="text-4xl font-bold"
-                  style={{ color: "var(--m-color-primary)" }}
-                >
-                  {count} times
-                </p>
+                <p className="text-text-secondary">You clicked the button:</p>
+                <p className="text-4xl font-bold text-primary">{count} times</p>
               </div>
               <button
                 onClick={() => setCount((c) => c + 1)}
-                className="inline-flex items-center gap-2 rounded-xl px-5 py-3 font-medium shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
-                style={{
-                  backgroundColor: "var(--m-color-primary)",
-                  color: "var(--m-color-accent-on-primary)",
-                }}
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-3 font-medium shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 bg-primary text-white hover:bg-primary-hover"
               >
                 Increment
               </button>
             </div>
           </div>
 
-          <div
-            className="border rounded-2xl shadow-xl backdrop-blur p-6 sm:p-8 mt-8"
-            style={{
-              backgroundColor: "var(--m-color-card)",
-              borderColor: "var(--m-color-border)",
-            }}
-          >
+          <div className="border rounded-2xl shadow-xl backdrop-blur p-6 sm:p-8 mt-8 bg-surface border-border">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p style={{ color: "var(--m-color-text-secondary)" }}>
-                  Created issues
-                </p>
-                <p
-                  className="text-4xl font-bold"
-                  style={{ color: "var(--m-color-primary)" }}
-                >
-                  {count}
-                </p>
+                <p className="text-text-secondary">Created issues</p>
+                <p className="text-4xl font-bold text-primary">{count}</p>
               </div>
               <button
                 onClick={() => issuesMutation.mutate({ title: "random title" })}
-                className="inline-flex items-center gap-2 rounded-xl px-5 py-3 font-medium shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
-                style={{
-                  backgroundColor: "var(--m-color-primary)",
-                  color: "var(--m-color-accent-on-primary)",
-                }}
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-3 font-medium shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 bg-primary text-white hover:bg-primary-hover"
               >
                 Add issue
               </button>
@@ -164,11 +110,7 @@ function IssuesList({ data }: { data: IssueResponse[] | undefined }) {
   return (
     <ul className="mt-4">
       {data.map((issue) => (
-        <li
-          key={issue.id}
-          className="text-sm list-disc"
-          style={{ color: "var(--m-color-text-secondary)" }}
-        >
+        <li key={issue.id} className="text-sm list-disc text-text-secondary">
           ({`${issue.id?.substring(0, 6)}...`}) &gt; {issue.title}
         </li>
       ))}

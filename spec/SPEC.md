@@ -559,6 +559,15 @@ The Allegro Design System theme has been fully implemented in the frontend with 
 - Theme CSS variables can be used directly in components via inline styles
 - Example usage in App.tsx demonstrates theme toggle and CSS variable usage
 
+**Tailwind CSS Integration** (`/frontend/src/index.css`):
+- Tailwind v4 `@theme` configuration maps all Allegro theme tokens to Tailwind utilities
+- Semantic color classes: `bg-primary`, `text-text`, `bg-surface`, `border-border`
+- Full color palettes: `bg-orange-500`, `bg-teal-600`, `text-navy-700`, etc.
+- Border radius utilities: `rounded-xs`, `rounded-md`, `rounded-lg`
+- All utilities automatically adapt to light/dark mode
+- Comprehensive documentation in `/frontend/src/theme/TAILWIND.md`
+- Components can use Tailwind classes instead of inline styles for cleaner code
+
 **Testing**:
 - 8 comprehensive tests covering all theme functionality
 - Tests for light/dark mode switching
@@ -567,23 +576,32 @@ The Allegro Design System theme has been fully implemented in the frontend with 
 - System preference detection
 - Error handling for hook usage outside provider
 
-**Usage Example**:
+**Usage Examples**:
 ```tsx
+// Using CSS variables (original approach)
+<div style={{ 
+  backgroundColor: 'var(--m-color-card)',
+  color: 'var(--m-color-text)'
+}}>Content</div>
+
+// Using Tailwind classes (preferred approach)
+<div className="bg-surface text-text border border-border rounded-md p-4">
+  Content
+</div>
+
+// Theme toggling
 import { useTheme } from './theme';
 
 function MyComponent() {
   const { mode, toggleMode } = useTheme();
   
   return (
-    <div style={{ 
-      backgroundColor: 'var(--m-color-card)',
-      color: 'var(--m-color-text)',
-      borderColor: 'var(--m-color-border)'
-    }}>
-      <button onClick={toggleMode}>
-        Current theme: {mode}
-      </button>
-    </div>
+    <button 
+      onClick={toggleMode}
+      className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
+    >
+      Toggle {mode} mode
+    </button>
   );
 }
 ```
