@@ -534,6 +534,10 @@ The Product domain is implemented in the `com.github.pigeon.products` package fo
   - `ProductQueries` - Public facade for read operations
   - `ProductCommands` - Public facade for write operations
   - `ProductConfiguration` - Spring configuration (package-private)
+  - `ProductRepositoryImpl` - Repository implementation using JPA (package-private)
+  - `PersistedProduct` - JPA entity for H2 database (package-private)
+  - `PersistedProductRepository` - Spring Data JPA repository (package-private)
+  - `ProductDataConfiguration` - Seed data configuration (package-private)
 
 **Domain Validation:**
 - Product fields are validated in record constructors
@@ -542,8 +546,22 @@ The Product domain is implemented in the `com.github.pigeon.products` package fo
 - Product quantity constraints: minQty and maxQty must be positive, minQty ≤ maxQty
 - All required fields validated as non-null and non-blank
 
+**Repository Implementation:**
+- Uses H2 in-memory database for local development
+- `PersistedProduct` JPA entity with all product fields
+- Attributes stored as JSON string for flexibility
+- Batch query optimization using `findByIdIn` with JPA query to avoid N+1 problem
+- 30 mock products seeded on startup via `ProductDataConfiguration`
+
+**Data Seeding:**
+- Mock products from multiple sellers (Electronics Plus, BookWorld, Fashion Hub, Home & Garden, Sports Center)
+- Product categories include electronics, books, clothing, home appliances, and sports equipment
+- Prices range from 89 PLN to 5,299 PLN
+- Includes products with and without list prices (sales)
+- One out-of-stock product for testing
+
 **Architecture Compliance:**
 - Configuration classes are package-private
 - Only facade classes (Commands/Queries) are public
-- Repository implementations will be package-private
+- Repository implementations are package-private
 - Follows established patterns from the issues module

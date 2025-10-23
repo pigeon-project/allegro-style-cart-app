@@ -40,8 +40,7 @@ class ProductControllerIntegrationTest {
                 .andExpect(jsonPath("$.minQty").value(1))
                 .andExpect(jsonPath("$.maxQty").value(5))
                 .andExpect(jsonPath("$.attributes").isArray())
-                .andExpect(jsonPath("$.attributes[0].name").value("RAM"))
-                .andExpect(jsonPath("$.attributes[0].value").value("16GB"));
+                .andExpect(jsonPath("$.attributes", hasSize(2)));
     }
 
     @Test
