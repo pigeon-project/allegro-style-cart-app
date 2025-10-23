@@ -601,3 +601,52 @@ The Product REST API is implemented in the `com.github.pigeon.products.web` pack
 - Batch query endpoint optimized with single database query
 - Lazy initialization enabled to reduce startup time
 - JPA open-in-view disabled to prevent lazy loading issues
+
+### 11.3 Cart Domain
+
+The Cart domain is implemented in the `com.github.pigeon.cart` package following a feature-based layout:
+
+**Package Structure:**
+- `cart/api/` - Public domain models and utilities
+  - `CartItem` - Record representing an item in the cart (itemId, productId, quantity, price, listPrice)
+  - `CartComputed` - Record for computed totals (subtotal, delivery, total)
+  - `CartSnapshot` - Record for cart state with items and computed totals
+  - `QuoteRequest` - Record for requesting price quotes with nested QuoteItem
+  - `QuoteResponse` - Record for quote responses extending CartSnapshot semantics
+  - `CartCalculations` - Utility class for all cart calculations with banker's rounding
+  - `QuantityValidator` - Utility class for quantity validation and clipping
+
+**Domain Models:**
+- All models use records for immutability
+- Validation implemented in compact constructors
+- Money type from products domain is reused for monetary values
+- All amounts stored in grosze (1 PLN = 100 grosze)
+
+**Business Rules:**
+The CartCalculations utility implements all cart business logic:
+- **LineTotal** = quantity × price
+- **SavingsPerLine** = quantity × (listPrice - price), minimum 0
+- **Subtotal** = sum of all line totals
+- **TotalSavings** = sum of all savings per line
+- **GrandTotal** = Subtotal + Delivery
+
+**Currency and Rounding:**
+- Currency: PLN (Polish Złoty)
+- Precision: 2 decimal places
+- Rounding: Banker's rounding (HALF_EVEN) for all calculations
+- Uses BigDecimal for precise calculations to avoid floating-point errors
+- All calculations convert from grosze to PLN, calculate, then convert back
+
+**Quantity Validation:**
+The QuantityValidator utility implements quantity constraint logic:
+- Validates and clips quantity to [minQty, min(maxQty, availability.maxOrderable)]
+- Default minQty: 1 (if not specified)
+- Default maxQty: 99 (if not specified)
+- Upper bound is the minimum of maxQty and availability.maxOrderable
+- Provides both validation (isValid) and clipping (validateAndClip) methods
+
+**Testing:**
+- 76 comprehensive unit tests covering all domain models and utilities
+- Tests include validation, edge cases, and banker's rounding scenarios
+- All tests pass with 100% success rate
+- Tests follow JUnit 5 conventions with descriptive display names
