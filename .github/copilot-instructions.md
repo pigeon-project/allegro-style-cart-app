@@ -4,9 +4,8 @@ information that does not match the info here.
 ## General Rules
 
 - Make sure to create a Dockerfile to run the app easily in a container.
-- If the repository does not have a `SPEC.md` file in the root directory, create one.
-- If the repository already has a `SPEC.md` file in the root directory, always make sure
-  to update it when implementing new features or changing project assumptions or infrastructure decisions.
+- If the repository does not have a `SPEC.md` file in the `/spec` directory, create one.
+- Always make sure to update `SPEC.md` in the `spec` directory when implementing new features or changing project assumptions or infrastructure decisions.
 
 ## Frontend Development Rules
 

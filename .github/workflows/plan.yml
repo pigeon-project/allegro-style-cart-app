@@ -1,0 +1,72 @@
+name: Plan
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  # pull-requests: write   # Uncomment if later creating PRs
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: ${{ github.event.repository.name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22 (required by @github/copilot >=0.0.336)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Authenticate gh CLI, ensures the correct token cached
+        env:
+          GH_CLI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GH_CLI_TOKEN" | gh auth login --with-token
+          gh auth status
+
+#      - name: Create a test issue to verify permissions
+#        run: |
+#          gh issue create --repo pigeon-project/todo-service-copilot-planning --title "Test Issue for Permissions" --body "This is a test issue to verify that the workflow has permission to create issues." || {
+#            echo "::error::Failed to create test issue. Check repository permissions."
+#            exit 1
+#          }
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Verify spec directory
+        run: |
+          if [ ! -d spec ]; then
+            echo "::error::spec directory missing"
+            exit 1
+          fi
+          if [ ! -f spec/SPEC.md ]; then
+            echo "::warning::spec/SPEC.md not found; listing files for diagnostics"
+            find spec -maxdepth 2 -type f -print
+          fi
+
+      - name: Ensure labels exist
+        run: |
+          gh label create frontend --description "Frontend development tasks" --color "1D76DB" 2>/dev/null || true
+          gh label create backend  --description "Backend development tasks"  --color "0E8A16" 2>/dev/null || true
+
+      - name: Create issues from SPEC (non-interactive, no file writes)
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_PAT }}
+        run: |
+          echo "--- GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+          echo "--- PROJECT_NAME: $PROJECT_NAME"
+          PROMPT="Read all files in the ./spec directory in $PROJECT_NAME. Start with ./spec/SPEC.md. Based on them create GitHub issues in the $PROJECT_NAME repo grouped by Frontend and Backend. Break work into small, dev-friendly chunks with clear titles, actionable descriptions, acceptance criteria, and use existing labels (frontend/backend). Do not create or modify files. The repository already contains the runtime base. Analyze it and focus on creating issues only. Make sure to cover all requirements in the /spec directory. When creating issues via gh CLI use GITHUB_TOKEN"
+          echo "--- PROMPT START ---"
+          echo $PROMPT
+          echo "--- PROMPT END ---"
+          copilot \
+            -p "${PROMPT}" \
+            --allow-all-tools \
+            --deny-tool 'shell(rm)' \
+            --deny-tool 'shell(sudo)'
