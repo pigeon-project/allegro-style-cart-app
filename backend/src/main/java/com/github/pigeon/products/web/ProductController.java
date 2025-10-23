@@ -74,4 +74,20 @@ class ProductController {
     ) {
         return productQueries.getProducts(ids);
     }
+
+    @Operation(
+        summary = "Get recommended products",
+        description = "Retrieves a static list of 12 recommended products for the carousel. Products are diverse with different sellers and price ranges."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Recommended products retrieved successfully",
+            content = @Content(schema = @Schema(implementation = Product.class))
+        )
+    })
+    @GetMapping("/recommended")
+    List<Product> getRecommendedProducts() {
+        return productQueries.getRecommendedProducts();
+    }
 }
