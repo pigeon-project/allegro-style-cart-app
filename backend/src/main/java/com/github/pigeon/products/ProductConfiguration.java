@@ -1,5 +1,6 @@
 package com.github.pigeon.products;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pigeon.products.api.ProductRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,5 +16,10 @@ class ProductConfiguration {
     @Bean
     ProductCommands productCommands(ProductRepository productRepository) {
         return new ProductCommands(productRepository);
+    }
+    
+    @Bean
+    ProductRepository productRepository(PersistedProductRepository persistedProductRepository, ObjectMapper objectMapper) {
+        return new ProductRepositoryImpl(persistedProductRepository, objectMapper);
     }
 }

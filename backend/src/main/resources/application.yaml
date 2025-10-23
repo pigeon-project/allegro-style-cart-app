@@ -8,3 +8,10 @@ spring:
     lazy-initialization: true
   jpa:
     open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: false
