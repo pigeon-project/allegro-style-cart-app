@@ -4,9 +4,12 @@ import viteLogo from "/vite.svg";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import wretch from "wretch";
 import type { IssueCreationRequest, IssueResponse } from "./api-types.ts";
+import { useTheme } from "./theme";
 
 export default function App() {
   const [count, setCount] = useState(0);
+  const { mode, toggleMode } = useTheme();
+
   const issuesQuery = useQuery({
     queryKey: ["issues"],
     queryFn: () => wretch().get("/api/issues").json<IssueResponse[]>(),
@@ -33,7 +36,7 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 flex items-center justify-center p-6">
+    <div className="min-h-screen p-6 flex items-center justify-center bg-background text-text">
       <div className="w-full max-w-xl">
         <header className="text-center mb-10">
           <div className="flex items-center justify-center gap-6 mb-4">
@@ -41,7 +44,7 @@ export default function App() {
               href="https://vite.dev"
               target="_blank"
               rel="noreferrer"
-              className="rounded-xl p-3 bg-white/5 border border-white/10 shadow-inner hover:bg-white/10"
+              className="rounded-xl p-3 border bg-surface border-border shadow-inner"
             >
               <img src={viteLogo} alt="Vite logo" className="h-12 w-12" />
             </a>
@@ -49,45 +52,47 @@ export default function App() {
               href="https://react.dev"
               target="_blank"
               rel="noreferrer"
-              className="rounded-xl p-3 bg-white/5 border border-white/10 shadow-inner hover:bg-white/10"
+              className="rounded-xl p-3 border bg-surface border-border shadow-inner"
             >
               <img src={reactLogo} alt="React logo" className="h-12 w-12" />
             </a>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-            Vite + React + Tailwind
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">
+            Allegro Design System Demo
           </h1>
-          <p className="mt-2 text-slate-300">
-            A tiny demo styled with Tailwind CSS
-          </p>
+          <p className="text-text-secondary">Theme: {mode} mode</p>
+          <button
+            onClick={toggleMode}
+            className="mt-3 px-4 py-2 rounded font-medium bg-primary text-white"
+          >
+            Toggle Theme
+          </button>
         </header>
         <main>
-          <div className="bg-slate-800/60 border border-slate-700 rounded-2xl shadow-xl backdrop-blur p-6 sm:p-8">
+          <div className="border rounded-2xl shadow-xl backdrop-blur p-6 sm:p-8 bg-surface border-border">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-slate-300">You clicked the button:</p>
-                <p className="text-4xl font-bold text-indigo-400">
-                  {count} times
-                </p>
+                <p className="text-text-secondary">You clicked the button:</p>
+                <p className="text-4xl font-bold text-primary">{count} times</p>
               </div>
               <button
                 onClick={() => setCount((c) => c + 1)}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 text-white font-medium shadow-lg shadow-indigo-500/25 hover:bg-indigo-400 active:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-offset-2 focus:ring-offset-slate-900"
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-3 font-medium shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 bg-primary text-white hover:bg-primary-hover"
               >
                 Increment
               </button>
             </div>
           </div>
 
-          <div className="bg-slate-800/60 border border-slate-700 rounded-2xl shadow-xl backdrop-blur p-6 sm:p-8 mt-8">
+          <div className="border rounded-2xl shadow-xl backdrop-blur p-6 sm:p-8 mt-8 bg-surface border-border">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-slate-300">Created issues</p>
-                <p className="text-4xl font-bold text-indigo-400">{count}</p>
+                <p className="text-text-secondary">Created issues</p>
+                <p className="text-4xl font-bold text-primary">{count}</p>
               </div>
               <button
                 onClick={() => issuesMutation.mutate({ title: "random title" })}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 text-white font-medium shadow-lg shadow-indigo-500/25 hover:bg-indigo-400 active:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-offset-2 focus:ring-offset-slate-900"
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-3 font-medium shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 bg-primary text-white hover:bg-primary-hover"
               >
                 Add issue
               </button>
@@ -105,7 +110,7 @@ function IssuesList({ data }: { data: IssueResponse[] | undefined }) {
   return (
     <ul className="mt-4">
       {data.map((issue) => (
-        <li key={issue.id} className="text-sm text-slate-300 list-disc">
+        <li key={issue.id} className="text-sm list-disc text-text-secondary">
           ({`${issue.id?.substring(0, 6)}...`}) &gt; {issue.title}
         </li>
       ))}

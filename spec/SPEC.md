@@ -511,6 +511,101 @@ HTTP semantics: 400/401/403/404/409/412/422/429/5xx per shared NFR.
 * **Testing**: Unit (calculations), integration (quantity/remove/add flows)
 * **E2e tests* using playwright
 
+### 9.1 Theme System Implementation
+
+The Allegro Design System theme has been fully implemented in the frontend with the following components:
+
+**Theme Tokens** (`/frontend/src/theme/tokens.css`):
+- All CSS custom properties from the specification implemented as CSS variables
+- Complete color palette with 9 scales for each color (blue, gray, green, haze, navy, orange, red, teal, yellow)
+- RGB variants for all key colors to enable rgba() combinations
+- Opacity tokens (0-100) with semantic aliases (primary, secondary, tertiary, etc.)
+- Border radius tokens with calculated values and semantic mappings
+- Comprehensive semantic color mappings for UI elements (text, borders, backgrounds, links, buttons, etc.)
+- Full dark mode support with automatic color overrides
+
+**Theme Provider** (`/frontend/src/theme/ThemeProvider.tsx`):
+- React context-based theme management
+- Supports both light and dark modes
+- Persists theme preference in localStorage
+- Automatically detects system color scheme preference
+- Applies `.dark` class to document root for dark mode
+- Listens for system theme changes and updates accordingly
+
+**Theme Hook** (`/frontend/src/theme/useTheme.ts`):
+- `useTheme()` hook for accessing theme context in components
+- Provides `mode`, `setMode()`, and `toggleMode()` functions
+- Throws helpful error if used outside ThemeProvider
+
+**Theme Utilities** (`/frontend/src/theme/utils.ts`):
+- `getColor()` - Get palette colors by name and scale
+- `getSemanticColor()` - Get semantic colors (text, border, etc.)
+- `getOpacity()` - Get opacity values
+- `getBorderRadius()` - Get border radius values
+- `cssVar()` - Create CSS variable references
+- `rgba()` - Create rgba colors from RGB tokens
+- `getAllTokens()` - Get all current theme token values
+
+**TypeScript Types** (`/frontend/src/theme/types.ts`):
+- Complete type definitions for all theme tokens
+- ThemeMode type ("light" | "dark")
+- Color palette, opacity, border radius types
+- Semantic color categories
+- Theme configuration interfaces
+
+**Integration**:
+- ThemeProvider wraps the entire app in `main.tsx`
+- All theme tokens imported in `index.css`
+- Theme CSS variables can be used directly in components via inline styles
+- Example usage in App.tsx demonstrates theme toggle and CSS variable usage
+
+**Tailwind CSS Integration** (`/frontend/src/index.css`):
+- Tailwind v4 `@theme` configuration maps all Allegro theme tokens to Tailwind utilities
+- Semantic color classes: `bg-primary`, `text-text`, `bg-surface`, `border-border`
+- Full color palettes: `bg-orange-500`, `bg-teal-600`, `text-navy-700`, etc.
+- Border radius utilities: `rounded-xs`, `rounded-md`, `rounded-lg`
+- All utilities automatically adapt to light/dark mode
+- Comprehensive documentation in `/frontend/src/theme/TAILWIND.md`
+- Components can use Tailwind classes instead of inline styles for cleaner code
+
+**Testing**:
+- 8 comprehensive tests covering all theme functionality
+- Tests for light/dark mode switching
+- localStorage persistence
+- Document class application
+- System preference detection
+- Error handling for hook usage outside provider
+
+**Usage Examples**:
+```tsx
+// Using CSS variables (original approach)
+<div style={{ 
+  backgroundColor: 'var(--m-color-card)',
+  color: 'var(--m-color-text)'
+}}>Content</div>
+
+// Using Tailwind classes (preferred approach)
+<div className="bg-surface text-text border border-border rounded-md p-4">
+  Content
+</div>
+
+// Theme toggling
+import { useTheme } from './theme';
+
+function MyComponent() {
+  const { mode, toggleMode } = useTheme();
+  
+  return (
+    <button 
+      onClick={toggleMode}
+      className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
+    >
+      Toggle {mode} mode
+    </button>
+  );
+}
+```
+
 ## 10. Acceptance Criteria
 
 1. cart with mixed items shows similar layout, spacing, and typography to baseline screenshots.

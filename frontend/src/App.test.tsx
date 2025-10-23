@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import App from "./App";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "./theme";
 
 describe("App button", () => {
   it("increments the counter when clicking the Increment button", async () => {
@@ -10,7 +11,9 @@ describe("App button", () => {
 
     render(
       <QueryClientProvider client={new QueryClient()}>
-        <App />
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
       </QueryClientProvider>,
     );
 
