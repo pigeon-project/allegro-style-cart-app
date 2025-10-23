@@ -1103,3 +1103,183 @@ The application implements comprehensive observability following SHARED-NFR.md r
 - Correlation IDs enable distributed tracing
 - All required fields present per SHARED-NFR
 - No PII in logs (only product IDs, cart IDs, user IDs)
+
+## 12. Frontend Product API Implementation
+
+### 12.1 API Client Architecture
+
+The frontend Product API client is implemented in the `/frontend/src/api` directory with a clean separation of concerns:
+
+**HTTP Client (`http-client.ts`):**
+- Base wretch client configured for `/api` endpoints
+- Default JSON headers
+- Correlation ID generation using `crypto.randomUUID()`
+- Automatic header injection via `withCorrelationId()` helper
+
+**Product API (`products.ts`):**
+- `getProduct(id)` - Fetches a single product by ID
+- `getProducts(ids)` - Fetches multiple products by IDs (batch query)
+- `getRecommendedProducts()` - Fetches recommended products for carousel
+- All functions include correlation ID in headers
+- Type-safe with TypeScript types from OpenAPI spec
+
+**React Query Hooks (`useProducts.ts`):**
+- `useProduct(id)` - Hook for fetching single product
+- `useProducts(ids)` - Hook for fetching multiple products
+- `useRecommendedProducts()` - Hook for fetching recommended products
+- Query key factory pattern for cache invalidation
+- Exponential backoff retry logic (3 retries, max 30s delay)
+- Configured stale times: 5 minutes for products, 10 minutes for recommendations
+
+### 12.2 Error Handling and Retry Logic
+
+**Retry Strategy:**
+- 3 retry attempts on failure
+- Exponential backoff: `min(1000 * 2^attemptIndex, 30000)` ms
+- Automatic retry on network errors and 5xx responses
+- No retry on 4xx client errors
+
+**Error Propagation:**
+- React Query error states exposed via hooks
+- Correlation IDs tracked for debugging
+- Errors bubble up to component level for UI handling
+
+### 12.3 Type Safety
+
+**Generated Types (`api-types.ts`):**
+- Auto-generated from OpenAPI spec via `npm run generate-types`
+- Product, Money, Availability interfaces match backend models
+- Type-only imports for better tree-shaking
+- Kept in sync with backend API changes
+
+**Type Coverage:**
+```typescript
+interface Product {
+  id?: string;
+  sellerId?: string;
+  sellerName?: string;
+  title?: string;
+  imageUrl?: string;
+  attributes?: Record<string, string>[];
+  price?: Money;
+  listPrice?: Money;
+  currency?: string;
+  availability?: Availability;
+  minQty?: number;
+  maxQty?: number;
+}
+
+interface Money {
+  amount?: number; // in grosze (1 PLN = 100 grosze)
+  currency?: string; // "PLN"
+}
+
+interface Availability {
+  inStock?: boolean;
+  maxOrderable?: number;
+}
+```
+
+### 12.4 Testing
+
+**Unit Tests (`products.test.ts`):**
+- 7 tests covering all API functions
+- Mock wretch HTTP client
+- Verify correlation ID inclusion
+- Test empty array handling
+- Test URL parameter construction
+
+**React Query Tests (`useProducts.test.tsx`):**
+- 6 tests covering all hooks
+- Test successful data fetching
+- Test loading states
+- Test query key generation
+- Test enabled/disabled queries (empty IDs)
+- QueryClient with retry disabled for tests
+
+**Test Coverage:**
+- 21 total tests for Product API
+- All tests passing
+- Mocked HTTP layer for isolation
+- Fast execution (<2s)
+
+### 12.5 Usage Examples
+
+**Basic Product Fetch:**
+```typescript
+import { useProduct } from './api';
+
+function ProductDetail({ id }: { id: string }) {
+  const { data: product, isLoading, error } = useProduct(id);
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (!product) return null;
+  
+  return <div>{product.title}</div>;
+}
+```
+
+**Batch Product Fetch:**
+```typescript
+import { useProducts } from './api';
+
+function CartItems({ productIds }: { productIds: string[] }) {
+  const { data: products, isLoading } = useProducts(productIds);
+  
+  if (isLoading) return <div>Loading products...</div>;
+  
+  return (
+    <div>
+      {products?.map(product => (
+        <div key={product.id}>{product.title}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+**Recommended Products:**
+```typescript
+import { useRecommendedProducts } from './api';
+
+function RecommendedCarousel() {
+  const { data: products } = useRecommendedProducts();
+  
+  return (
+    <div className="carousel">
+      {products?.map(product => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
+}
+```
+
+### 12.6 Cache Management
+
+**Query Keys:**
+- Structured query keys enable precise cache invalidation
+- Hierarchical key structure: `['products', 'detail', id]`
+- Bulk invalidation: `queryClient.invalidateQueries({ queryKey: productKeys.all })`
+- Selective invalidation: `queryClient.invalidateQueries({ queryKey: productKeys.detail(id) })`
+
+**Stale Time Configuration:**
+- Products: 5 minutes (balance between freshness and performance)
+- Recommended products: 10 minutes (changes infrequently)
+- Background refetch on window focus
+- Automatic garbage collection after queries become inactive
+
+### 12.7 Performance Considerations
+
+**Optimization Strategies:**
+- Batch queries via `getProducts(ids)` to avoid N+1 problems
+- React Query deduplication prevents duplicate requests
+- Automatic request caching reduces network calls
+- Optimistic updates prepared for mutations (future)
+
+**Network Efficiency:**
+- Correlation IDs for request tracing
+- Compressed responses (gzip)
+- Efficient URL parameter encoding for batch queries
+- Configurable retry delays to avoid overwhelming backend
