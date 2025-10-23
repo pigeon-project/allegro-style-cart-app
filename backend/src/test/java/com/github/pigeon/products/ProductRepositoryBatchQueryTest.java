@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ class ProductRepositoryBatchQueryTest {
     @Autowired
     private ProductRepository productRepository;
 
-    @SpyBean
+    @MockitoSpyBean
     private PersistedProductRepository persistedProductRepository;
 
     @Test
