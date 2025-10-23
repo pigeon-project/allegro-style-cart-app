@@ -1,6 +1,107 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { CartItem } from "../components";
+import type { CartItem as CartItemType, Product } from "../api-types";
+
+// Mock cart data for demonstration
+const mockProducts: Product[] = [
+  {
+    id: "prod-001",
+    sellerId: "seller-123",
+    sellerName: "Electronics Plus",
+    title: "Logitech MX Master 3S Wireless Mouse - Graphite",
+    imageUrl: "https://via.placeholder.com/200x200/4A4A4A/FFFFFF?text=Mouse",
+    attributes: [{ Color: "Graphite" }, { Connectivity: "Bluetooth/USB" }],
+    price: { amount: 34999, currency: "PLN" },
+    listPrice: { amount: 44999, currency: "PLN" },
+    currency: "PLN",
+    availability: { inStock: true, maxOrderable: 50 },
+    minQty: 1,
+    maxQty: 10,
+  },
+  {
+    id: "prod-002",
+    sellerId: "seller-456",
+    sellerName: "BookWorld",
+    title:
+      "The Pragmatic Programmer: Your Journey To Mastery, 20th Anniversary Edition",
+    imageUrl: "https://via.placeholder.com/200x200/2E7D32/FFFFFF?text=Book",
+    attributes: [{ Format: "Paperback" }, { Language: "English" }],
+    price: { amount: 8900, currency: "PLN" },
+    currency: "PLN",
+    availability: { inStock: true, maxOrderable: 100 },
+    minQty: 1,
+    maxQty: 5,
+  },
+];
+
+const mockCartItems: CartItemType[] = [
+  {
+    itemId: "item-001",
+    productId: "prod-001",
+    quantity: 2,
+    price: { amount: 34999, currency: "PLN" },
+    listPrice: { amount: 44999, currency: "PLN" },
+  },
+  {
+    itemId: "item-002",
+    productId: "prod-002",
+    quantity: 1,
+    price: { amount: 8900, currency: "PLN" },
+  },
+];
 
 function CartPage() {
+  const [cartItems, setCartItems] = useState(mockCartItems);
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+
+  const handleQuantityChange = (itemId: string, newQuantity: number) => {
+    // Simulate optimistic update
+    setUpdatingItems((prev) => new Set(prev).add(itemId));
+
+    // Update local state immediately
+    setCartItems((items) =>
+      items.map((item) =>
+        item.itemId === itemId ? { ...item, quantity: newQuantity } : item,
+      ),
+    );
+
+    // Simulate API call delay
+    setTimeout(() => {
+      setUpdatingItems((prev) => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
+    }, 500);
+  };
+
+  const handleRemove = (itemId: string) => {
+    // Simulate optimistic removal
+    setRemovingItems((prev) => new Set(prev).add(itemId));
+
+    // Simulate API call delay
+    setTimeout(() => {
+      setCartItems((items) => items.filter((item) => item.itemId !== itemId));
+      setRemovingItems((prev) => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
+    }, 500);
+  };
+
+  // Calculate totals
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + (item.price?.amount || 0) * (item.quantity || 1),
+    0,
+  );
+  const delivery = 0;
+  const total = subtotal + delivery;
+
+  const formatPrice = (amount: number) => (amount / 100).toFixed(2);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Grid layout: cart items on left, summary on right (desktop), stacked on mobile */}
@@ -10,13 +111,33 @@ function CartPage() {
           <div className="bg-surface border border-border rounded-md p-6">
             <h1 className="text-2xl font-semibold mb-4">Shopping Cart</h1>
 
-            {/* Placeholder for cart items - will be implemented in future */}
-            <div className="text-center py-12 text-text-secondary">
-              <p className="text-lg">Cart items will be displayed here</p>
-              <p className="text-sm mt-2">
-                This is a placeholder for the cart layout
-              </p>
-            </div>
+            {cartItems.length === 0 ? (
+              <div className="text-center py-12 text-text-secondary">
+                <p className="text-lg">Your cart is empty</p>
+                <p className="text-sm mt-2">Add items to get started</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {cartItems.map((item) => {
+                  const product = mockProducts.find(
+                    (p) => p.id === item.productId,
+                  );
+                  if (!product) return null;
+
+                  return (
+                    <CartItem
+                      key={item.itemId}
+                      item={item}
+                      product={product}
+                      onQuantityChange={handleQuantityChange}
+                      onRemove={handleRemove}
+                      isUpdating={updatingItems.has(item.itemId!)}
+                      isRemoving={removingItems.has(item.itemId!)}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -25,20 +146,22 @@ function CartPage() {
           <div className="bg-surface border border-border rounded-md p-6 sticky top-20">
             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
 
-            {/* Placeholder for summary details */}
+            {/* Summary details */}
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm">
                 <span className="text-text-secondary">Subtotal</span>
-                <span className="font-medium">0.00 PLN</span>
+                <span className="font-medium">{formatPrice(subtotal)} PLN</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-text-secondary">Delivery</span>
-                <span className="font-medium">0.00 PLN</span>
+                <span className="font-medium">{formatPrice(delivery)} PLN</span>
               </div>
               <div className="border-t border-border pt-3 mt-3">
                 <div className="flex justify-between">
                   <span className="font-semibold">Total</span>
-                  <span className="font-semibold text-lg">0.00 PLN</span>
+                  <span className="font-semibold text-lg">
+                    {formatPrice(total)} PLN
+                  </span>
                 </div>
               </div>
             </div>
