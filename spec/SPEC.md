@@ -484,6 +484,7 @@ interface QuoteResponse extends CartSnapshot //with server‑ validated prices &
 
 * `GET /api/products/{id}` → `Product`
 * `GET /api/products?ids=…` → `Product[]`
+* `GET /api/products/recommended` → `Product[]` (returns 12 recommended products for carousel)
 
 **Cart (stateless pricing & validation)**
 
@@ -559,6 +560,14 @@ The Product domain is implemented in the `com.github.pigeon.products` package fo
 - Prices range from 89 PLN to 5,299 PLN
 - Includes products with and without list prices (sales)
 - One out-of-stock product for testing
+
+**Recommended Products:**
+- 12 static recommended products selected for the carousel
+- Diverse selection across all 5 sellers
+- Price range from 89 PLN to 1,499 PLN
+- Includes varied categories (electronics, home appliances, sports, fashion, books)
+- Accessible via `GET /api/products/recommended` endpoint
+- Products selected: Wireless Mouse, Coffee Machine, Yoga Mat, Sony Headphones, Air Fryer, Ray-Ban Sunglasses, Protein Powder, Tommy Hilfiger Polo, Nespresso, Levi's Jeans, Dumbbell Set, The Pragmatic Programmer
 
 **Architecture Compliance:**
 - Configuration classes are package-private

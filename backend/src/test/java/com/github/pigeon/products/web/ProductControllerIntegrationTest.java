@@ -128,4 +128,45 @@ class ProductControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(30)));
     }
+
+    @Test
+    @WithMockUser(value = "some.user")
+    @DisplayName("Should retrieve 12 recommended products")
+    void shouldRetrieveRecommendedProducts() throws Exception {
+        mockMvc.perform(get("/api/products/recommended"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(12)))
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].title").exists())
+                .andExpect(jsonPath("$[0].price.amount").exists())
+                .andExpect(jsonPath("$[0].sellerId").exists());
+    }
+
+    @Test
+    @WithMockUser(value = "some.user")
+    @DisplayName("Should have diverse sellers in recommended products")
+    void shouldHaveDiverseSellersInRecommendedProducts() throws Exception {
+        mockMvc.perform(get("/api/products/recommended"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(12)))
+                // Verify we have products from different sellers
+                .andExpect(jsonPath("$[?(@.sellerId == 'seller-001')]").exists())
+                .andExpect(jsonPath("$[?(@.sellerId == 'seller-002')]").exists())
+                .andExpect(jsonPath("$[?(@.sellerId == 'seller-003')]").exists())
+                .andExpect(jsonPath("$[?(@.sellerId == 'seller-004')]").exists())
+                .andExpect(jsonPath("$[?(@.sellerId == 'seller-005')]").exists());
+    }
+
+    @Test
+    @WithMockUser(value = "some.user")
+    @DisplayName("Should have diverse price ranges in recommended products")
+    void shouldHaveDiversePriceRangesInRecommendedProducts() throws Exception {
+        mockMvc.perform(get("/api/products/recommended"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(12)))
+                // Verify we have products in different price ranges
+                .andExpect(jsonPath("$[?(@.price.amount < 20000)]").exists())  // < 200 PLN
+                .andExpect(jsonPath("$[?(@.price.amount >= 20000 && @.price.amount < 50000)]").exists())  // 200-500 PLN
+                .andExpect(jsonPath("$[?(@.price.amount >= 50000)]").exists());  // > 500 PLN
+    }
 }
