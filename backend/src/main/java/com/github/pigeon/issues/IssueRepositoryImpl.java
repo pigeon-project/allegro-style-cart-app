@@ -7,7 +7,7 @@ import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
 
-public class IssueRepositoryImpl implements IssueRepository {
+class IssueRepositoryImpl implements IssueRepository {
     private final Clock clock;
     private final PersistedIssueRepository persistedIssueRepository;
 
