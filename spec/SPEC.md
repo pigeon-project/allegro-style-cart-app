@@ -650,3 +650,69 @@ The QuantityValidator utility implements quantity constraint logic:
 - Tests include validation, edge cases, and banker's rounding scenarios
 - All tests pass with 100% success rate
 - Tests follow JUnit 5 conventions with descriptive display names
+
+### 11.4 Cart Repository
+
+The Cart repository provides **stateless** cart operations - it does NOT persist cart state. Instead, it validates prices and availability against the Product catalog.
+
+**Package Structure:**
+- `cart/api/` - Public domain interfaces
+  - `CartRepository` - Interface for stateless cart operations
+- `cart/` - Internal implementation
+  - `CartRepositoryImpl` - Repository implementation (package-private)
+  - `CartConfiguration` - Spring configuration (package-private)
+
+**Implementation Details:**
+- **Stateless Design**: No persistence of cart state - all operations are stateless
+- **Batch Product Queries**: Fetches all products in a single batch query for efficiency
+- **Price Validation**: All prices are validated against the current Product catalog
+- **Price Drift Detection**: Prices from quote requests are replaced with current catalog prices
+- **Availability Checks**: Validates stock availability using Product.availability data
+- **Quantity Clipping**: Clips quantities to [minQty, min(maxQty, availability.maxOrderable)]
+- **Zero-Quantity Handling**: Items with zero quantity (out of stock) are excluded from the response
+
+**Core Operations:**
+1. `calculateQuote(QuoteRequest)` - Calculates a quote for cart items
+   - Validates all product IDs exist in catalog
+   - Fetches current prices from Product catalog (price drift detection)
+   - Validates and clips quantities based on availability and constraints
+   - Excludes items that are out of stock (maxOrderable = 0)
+   - Calculates totals using CartCalculations utilities
+   - Returns QuoteResponse with validated prices and availability
+
+**Business Logic:**
+- Default delivery cost: 0 PLN (configurable in future)
+- Items that exceed maxOrderable are clipped to available quantity
+- Items that are out of stock (maxOrderable = 0) are excluded from quote
+- Unique item IDs (UUIDs) are generated for each cart item
+- Cart ID is maintained from request to response
+
+**Error Handling:**
+- Throws IllegalArgumentException for:
+  - Null quote requests
+  - Non-existent product IDs
+- Invalid quantities in QuoteRequest are validated by QuoteRequest.QuoteItem
+
+**Integration Tests:**
+- 14 comprehensive integration tests using SpringBootTest
+- Tests cover:
+  - Single and multiple item quotes
+  - Price validation from product catalog
+  - List price inclusion for savings
+  - Quantity clipping to available stock
+  - Out of stock handling
+  - Batch query efficiency
+  - Min/max quantity constraints
+  - Null request handling
+  - Non-existent product handling
+  - Subtotal calculation correctness
+  - Default delivery cost
+  - Unique item ID generation
+  - Cart ID preservation
+- All tests passing with real product data from ProductDataConfiguration
+
+**Architecture Compliance:**
+- Configuration class is package-private
+- Repository implementation is package-private
+- Only CartRepository interface is public in api package
+- Follows established patterns from products and issues modules
