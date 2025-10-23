@@ -432,100 +432,50 @@ All responses use `application/json`.
 ### 7.2 Models
 
 ```ts
-Product
-{
+interface Product {
     id: string,
-        sellerId
-:
-    string,
-        sellerName
-:
-    string,
-        title
-:
-    string,
-        imageUrl
-:
-    string,
-        attributes ? : Array<{ name: string, value: string }>,
-        price
-:
-    Money,          // effective price used for totals
-        listPrice ? : Money,     // when present and > price, shows savings
-        currency
-:
-    'PLN',
-        availability
-:
-    {
-        inStock: boolean, maxOrderable
-    :
-        number
-    }
-,
-    minQty ? : number, maxQty ? : number, step ? : number,
+    sellerId: string,
+    sellerName: string,
+    title: string,
+    imageUrl: string,
+    attributes? : { name: string, value: string }[],
+    price: Money,          // effective price used for totals
+    listPrice? : Money,     // when present and > price, shows savings
+    currency: 'PLN',
+    availability: { inStock: boolean, maxOrderable: number},
+    minQty? : number,
+    maxQty? : number,
 }
 
-Money
-{
-    amount: number, precision
-:
-    2, currency
-:
-    'PLN'
+interface Money {
+    amount: number, //value in grosze
+    currency: 'PLN'
 }
 
-CartItem
-{
-    itemId: string,            // uuid (client‑generated)
-        productId
-:
-    string,
-        quantity
-:
-    number,
-        price
-:
-    Money,
-        listPrice ? : Money,
+interface CartItem {
+    itemId: string,            // uuid
+    productId: string,
+    quantity: number,
+    price: Money,
+    listPrice? : Money,
 }
 
-CartSnapshot
-{
-    cartId: string,            // uuid (backend‑generated)
-        items
-:
-    CartItem[],
-        computed
-:
-    {
-        subtotal: Money,
-            savings
-    :
-        Money,
-            delivery
-    :
-        Money,
-            total
-    :
-        Money
-    }
+interface CartSnapshot {
+  cartId: string,            // uuid (backend‑generated)
+  items: CartItem[],
+  computed: {
+    subtotal: Money,
+    delivery: Money,
+    total: Money
+  }
 }
 
-QuoteRequest
-{
+interface QuoteRequest{
     cartId: string,
-        items
-:
-    Array<{ productId: string, quantity: number }>
+    items: { productId: string, quantity: number }[]
 }
 
-QuoteResponse
-extends
-CartSnapshot
-with server‑
-validated
-prices & availability
+interface QuoteResponse extends CartSnapshot //with server‑ validated prices & availability
 ```
 
 ### 7.3 Endpoints
