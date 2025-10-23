@@ -777,6 +777,86 @@ The Cart REST API is implemented in the `com.github.pigeon.cart.web` package:
 - HTTP status codes: 400 (Bad Request), 404 (Not Found)
 - Structured error responses with type, title, status, and detail
 
+### 11.6 Comprehensive Error Handling
+
+The application implements comprehensive error handling following RFC 7807 (Problem Details for HTTP APIs) and SHARED-NFR.md requirements.
+
+**Error Handler:**
+- `GlobalExceptionHandler` in `com.github.pigeon.web` package
+- Extends `ResponseEntityExceptionHandler` for Spring Boot integration
+- Returns RFC 7807 Problem Detail responses for all errors
+- Logs errors appropriately (debug for 4xx, error for 5xx)
+- **No stack traces exposed to clients** - only logged server-side
+
+**Custom Exception Classes:**
+- `ResourceNotFoundException` (404) - Resource not found errors
+- `ConflictException` (409) - Concurrent modification conflicts
+- `PreconditionFailedException` (412) - ETag/If-Match failures
+- `DomainValidationException` (422) - Domain-level validation failures
+- `RateLimitExceededException` (429) - Rate limit exceeded
+
+**HTTP Status Code Mapping:**
+- **400 Bad Request** - Validation shape errors, illegal arguments
+- **401 Unauthorized** - Authentication required
+- **403 Forbidden** - Insufficient permissions
+- **404 Not Found** - Resource not found
+- **409 Conflict** - Concurrent modification detected
+- **412 Precondition Failed** - ETag/If-Match mismatch
+- **422 Unprocessable Entity** - Domain validation failures
+- **429 Too Many Requests** - Rate limit exceeded
+- **500 Internal Server Error** - Unexpected errors (stack trace logged only)
+
+**Bean Validation:**
+- Spring Boot Starter Validation integrated
+- `@Valid` annotations on controller request bodies
+- Validation errors return Problem Detail with field-level error details
+- Example: `AddItemRequest` validates productId is not blank and quantity is positive
+
+**Rate Limiting:**
+- Implemented using Bucket4j (token bucket algorithm)
+- `RateLimitInterceptor` in `com.github.pigeon.web.ratelimit` package
+- Rate limit: 100 requests per minute per user
+- Applied to all `/api/**` endpoints
+- Rate limiting headers included in all responses:
+  - `X-RateLimit-Limit`: Maximum requests per window (100)
+  - `X-RateLimit-Remaining`: Remaining requests in current window
+  - `X-RateLimit-Reset`: Unix timestamp when limit resets
+- Rate limit exceeded responses include `Retry-After` header
+
+**Problem Detail Response Format:**
+```json
+{
+  "type": "https://api.allegro-style-cart.com/problems/not-found",
+  "title": "Resource Not Found",
+  "status": 404,
+  "detail": "Product not found: prod-123",
+  "resourceType": "Product",
+  "resourceId": "prod-123"
+}
+```
+
+**Security:**
+- Internal stack traces never exposed to clients
+- Error messages sanitized to prevent information leakage
+- Authentication/authorization failures return generic messages
+- Security events logged for monitoring and alerting
+
+**Testing:**
+- Comprehensive error handling tests in `GlobalExceptionHandlerTest`
+- Rate limiting tests in `RateLimitTest`
+- Tests verify:
+  - Correct HTTP status codes
+  - RFC 7807 Problem Detail format
+  - No stack traces in responses
+  - Rate limit headers presence
+  - Rate limit enforcement (429 after limit exceeded)
+  - Domain validation errors
+  - Conflict and precondition failures
+
+**Design:**
+The implementation separates HTTP/transport concerns (status codes, headers) from domain logic (validation, business rules). Custom exceptions are thrown from domain/service layers, and the global exception handler translates them into appropriate HTTP responses with RFC 7807 Problem Details.
+
+
 **Design:**
 The implementation uses in-memory storage to maintain cart state between API calls, allowing endpoints to comply with the specification's minimal request body requirements. The CartStore provides:
 - Temporary storage of cart snapshots between requests
