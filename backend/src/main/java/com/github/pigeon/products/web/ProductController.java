@@ -2,6 +2,7 @@ package com.github.pigeon.products.web;
 
 import com.github.pigeon.products.ProductQueries;
 import com.github.pigeon.products.api.Product;
+import com.github.pigeon.web.exceptions.ResourceNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -10,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,13 +47,12 @@ class ProductController {
         )
     })
     @GetMapping("/{id}")
-    ResponseEntity<Product> getProduct(
+    Product getProduct(
         @Parameter(description = "Product ID", required = true)
         @PathVariable("id") String id
     ) {
         return productQueries.getProduct(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ResourceNotFoundException("Product", id));
     }
 
     @Operation(
