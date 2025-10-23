@@ -511,7 +511,62 @@ HTTP semantics: 400/401/403/404/409/412/422/429/5xx per shared NFR.
 * **Testing**: Unit (calculations), integration (quantity/remove/add flows)
 * **E2e tests* using playwright
 
-### 9.1 Theme System Implementation
+### 9.1 Routing Implementation
+
+The application uses TanStack Router (v1) with file-based routing for a type-safe and performant routing solution.
+
+**Router Configuration** (`/frontend/src/main.tsx`):
+- TanStack Router configured with auto-generated route tree
+- Router instance created and registered for TypeScript type safety
+- Wrapped with QueryClient and ThemeProvider for global state management
+
+**Router Plugin** (`/frontend/vite.config.ts`):
+- `@tanstack/router-plugin` Vite plugin added for file-based routing
+- Auto-generates `routeTree.gen.ts` from route files
+- Hot module replacement (HMR) support for route changes
+
+**Route Structure** (`/frontend/src/routes/`):
+- `__root.tsx` - Root layout component with header, logo, and theme toggle
+- `index.tsx` - Cart page component at `/` route
+- File-based routing pattern for scalability
+
+**Root Layout** (`/frontend/src/routes/__root.tsx`):
+- Header with Allegro logo and branding
+- Theme toggle button (light/dark mode)
+- Sticky header with border and proper z-index
+- Responsive design with Tailwind utilities
+- `<Outlet />` for nested route rendering
+
+**Cart Page** (`/frontend/src/routes/index.tsx`):
+- Root route `/` displays the cart page
+- Responsive grid layout: 2/3 cart content, 1/3 order summary on desktop
+- Stacked layout on mobile (order summary below cart)
+- Sticky order summary panel on desktop
+- Placeholder content for cart items (to be implemented)
+- Order summary with subtotal, delivery, and total
+- Primary action buttons (Delivery and Payment, Continue Shopping)
+- Coupon hint area
+
+**Responsive Breakpoints**:
+- Mobile: Single column, stacked layout
+- Desktop (lg): Two-column grid (2:1 ratio)
+- Order summary sticky on desktop, flows naturally on mobile
+
+**Type Safety**:
+- Auto-generated route tree provides full TypeScript type safety
+- Route params, search params, and loaders are fully typed
+- TypeScript module augmentation for router registration
+
+**Testing**:
+- Basic smoke tests for route rendering
+- Tests verify router doesn't crash and renders components
+- 38 total tests passing (2 new routing tests added)
+
+**Dependencies Added**:
+- `@tanstack/react-router` - Router library
+- `@tanstack/router-plugin` - Vite plugin for file-based routing
+
+### 9.2 Theme System Implementation
 
 The Allegro Design System theme has been fully implemented in the frontend with the following components:
 
