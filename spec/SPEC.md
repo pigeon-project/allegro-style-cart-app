@@ -1283,3 +1283,266 @@ function RecommendedCarousel() {
 - Compressed responses (gzip)
 - Efficient URL parameter encoding for batch queries
 - Configurable retry delays to avoid overwhelming backend
+
+## 13. Frontend Cart API Implementation
+
+### 13.1 Cart API Client Architecture
+
+The frontend Cart API client is implemented in the `/frontend/src/api` directory following the same patterns as the Product API:
+
+**HTTP Client (`http-client.ts`):**
+- Base wretch client configured for `/api` endpoints
+- Correlation ID generation using `crypto.randomUUID()`
+- Automatic header injection for all requests
+
+**Cart API (`cart.ts`):**
+- `addToCart(cartId, request)` - POST /api/carts/{cartId}/items
+- `updateQuantity(cartId, itemId, request)` - PATCH /api/carts/{cartId}/items/{itemId}
+- `removeItem(cartId, itemId)` - DELETE /api/carts/{cartId}/items/{itemId}
+- `getQuote(request)` - POST /api/carts/{cartId}/quote
+- All functions include correlation ID in headers
+- Type-safe with TypeScript types from OpenAPI spec
+
+**React Query Hooks (`useCart.ts`):**
+- `useAddToCart(cartId)` - Hook for adding items with optimistic updates
+- `useUpdateQuantity(cartId)` - Hook for updating quantity with optimistic updates
+- `useRemoveItem(cartId)` - Hook for removing items with optimistic updates
+- `useGetQuote()` - Hook for getting quotes with debouncing (300ms delay)
+- Query key factory pattern for cache management
+- Exponential backoff retry logic (3 retries, max 30s delay)
+
+### 13.2 Optimistic Updates
+
+All mutation hooks implement optimistic updates to provide instant UI feedback:
+
+**Add to Cart:**
+- Immediately adds item to local cart state
+- Generates temporary item ID
+- Rolls back on API error
+- Invalidates cache on completion
+
+**Update Quantity:**
+- Immediately updates item quantity in local state
+- Preserves all other item properties
+- Rolls back on API error
+- Invalidates cache on completion
+
+**Remove Item:**
+- Immediately removes item from local state
+- Rolls back on API error
+- Invalidates cache on completion
+
+### 13.3 Debounced Quote Requests
+
+The `useGetQuote` hook implements debouncing to prevent excessive API calls:
+
+**Debounce Strategy:**
+- 300ms delay (middle of 200-400ms requirement range)
+- Custom `useDebounce` hook for delayed execution
+- Multiple rapid calls coalesced into single API request
+- Cache updated on successful quote response
+
+**Use Cases:**
+- Price validation during cart changes
+- Availability checks
+- Delivery cost recalculation
+- Savings computation
+
+### 13.4 Error Handling and Rollback
+
+**Error Propagation:**
+- React Query error states exposed via hooks
+- Correlation IDs tracked for debugging
+- Errors bubble up to component level for UI handling
+- RFC 7807 Problem Detail responses
+
+**Rollback Mechanism:**
+- Optimistic updates automatically rolled back on error
+- Previous cart state preserved in mutation context
+- Cache restored to pre-mutation state
+- Error details available in hook return value
+
+### 13.5 Type Safety
+
+**Generated Types (`api-types.ts`):**
+- Auto-generated from OpenAPI spec via `npm run generate-types`
+- CartItem, CartSnapshot, QuoteRequest, QuoteResponse interfaces match backend models
+- AddItemRequest, UpdateItemRequest for mutations
+- Type-only imports for better tree-shaking
+- Kept in sync with backend API changes
+
+**Type Coverage:**
+```typescript
+interface CartItem {
+  itemId?: string;
+  listPrice?: Money;
+  price?: Money;
+  productId?: string;
+  quantity?: number;
+}
+
+interface CartSnapshot {
+  cartId?: string;
+  items?: CartItem[];
+  computed?: CartComputed;
+}
+
+interface QuoteRequest {
+  cartId?: string;
+  items?: QuoteItem[];
+}
+
+interface QuoteResponse {
+  cartId?: string;
+  computed?: CartComputed;
+  items?: CartItem[];
+}
+```
+
+### 13.6 Testing
+
+**Unit Tests (`cart.test.ts`):**
+- 6 tests covering all API functions
+- Mock wretch HTTP client
+- Verify correlation ID inclusion
+- Test request parameter construction
+- Test all HTTP methods (POST, PATCH, DELETE)
+
+**React Query Tests (`useCart.test.tsx`):**
+- 9 tests covering all hooks
+- Test successful mutations
+- Test API parameter passing
+- Test query key generation
+- QueryClient with retry disabled for tests
+- Fast execution (<2s)
+
+**Test Coverage:**
+- 15 total tests for Cart API
+- All tests passing
+- Mocked HTTP layer for isolation
+- Type-safe test assertions
+
+### 13.7 Usage Examples
+
+**Add to Cart:**
+```typescript
+import { useAddToCart } from './api';
+
+function ProductCard({ product }: { product: Product }) {
+  const addToCart = useAddToCart("cart-123");
+  
+  const handleAddToCart = () => {
+    addToCart.mutate({
+      productId: product.id!,
+      quantity: 1,
+    });
+  };
+  
+  return (
+    <button onClick={handleAddToCart} disabled={addToCart.isPending}>
+      {addToCart.isPending ? 'Adding...' : 'Add to Cart'}
+    </button>
+  );
+}
+```
+
+**Update Quantity:**
+```typescript
+import { useUpdateQuantity } from './api';
+
+function CartItem({ item, cartId }: { item: CartItem, cartId: string }) {
+  const updateQuantity = useUpdateQuantity(cartId);
+  
+  const handleQuantityChange = (newQuantity: number) => {
+    updateQuantity.mutate({
+      itemId: item.itemId!,
+      request: { quantity: newQuantity },
+    });
+  };
+  
+  return (
+    <input
+      type="number"
+      value={item.quantity}
+      onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
+    />
+  );
+}
+```
+
+**Remove Item:**
+```typescript
+import { useRemoveItem } from './api';
+
+function CartItem({ item, cartId }: { item: CartItem, cartId: string }) {
+  const removeItem = useRemoveItem(cartId);
+  
+  const handleRemove = () => {
+    removeItem.mutate(item.itemId!);
+  };
+  
+  return (
+    <button onClick={handleRemove} disabled={removeItem.isPending}>
+      Remove
+    </button>
+  );
+}
+```
+
+**Get Quote (Debounced):**
+```typescript
+import { useGetQuote } from './api';
+
+function CartSummary({ cartId, items }: { cartId: string, items: QuoteItem[] }) {
+  const getQuote = useGetQuote();
+  
+  useEffect(() => {
+    // This will be debounced - only called once after 300ms of no changes
+    getQuote.mutate({
+      cartId,
+      items,
+    });
+  }, [cartId, items, getQuote]);
+  
+  if (getQuote.isPending) return <div>Calculating...</div>;
+  if (getQuote.isError) return <div>Error calculating total</div>;
+  
+  return (
+    <div>
+      <div>Subtotal: {getQuote.data?.computed?.subtotal?.amount} PLN</div>
+      <div>Total: {getQuote.data?.computed?.total?.amount} PLN</div>
+    </div>
+  );
+}
+```
+
+### 13.8 Cache Management
+
+**Query Keys:**
+- Structured query keys enable precise cache invalidation
+- Hierarchical key structure: `['cart', cartId]`
+- Quote-specific keys: `['cart', cartId, 'quote']`
+- Bulk invalidation: `queryClient.invalidateQueries({ queryKey: cartKeys.all })`
+- Selective invalidation: `queryClient.invalidateQueries({ queryKey: cartKeys.cart(cartId) })`
+
+**Cache Behavior:**
+- Optimistic updates provide instant UI feedback
+- Server responses overwrite optimistic state
+- Automatic cache invalidation after mutations
+- No stale time configured (always fresh after mutation)
+- Background refetch disabled (mutations handle updates)
+
+### 13.9 Performance Considerations
+
+**Optimization Strategies:**
+- Optimistic updates eliminate perceived latency
+- Debounced quote calls reduce API load (300ms delay)
+- React Query deduplication prevents duplicate requests
+- Automatic request caching when applicable
+- Efficient rollback mechanism on errors
+
+**Network Efficiency:**
+- Correlation IDs for request tracing and debugging
+- Minimal request payloads (only changed data)
+- Batch operations not needed (server handles efficiently)
+- Retry logic with exponential backoff prevents API hammering
