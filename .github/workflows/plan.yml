@@ -2,9 +2,9 @@ name: Plan
 on:
   workflow_dispatch:
 
-permissions:
-  contents: read
-  issues: write
+#permissions:
+#  contents: read
+#  issues: write
   # pull-requests: write   # Uncomment if later creating PRs
 
 jobs:
@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT_NAME: ${{ github.event.repository.name }}
+      #GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.COPILOT_PAT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,13 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Authenticate gh CLI, ensures the correct token cached
-        env:
-          GH_CLI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "$GH_TOKEN" | gh auth login --with-token
-          gh auth status
 
       - name: Create a test issue to verify permissions
         run: |
@@ -56,9 +51,6 @@ jobs:
 
       - name: Create issues from SPEC (non-interactive, no file writes)
         working-directory: .
-#        env:
-#          GH_TOKEN: ${{ secrets.COPILOT_PAT }}
-#          GH_CLI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "--- GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
           echo "--- PROJECT_NAME: $PROJECT_NAME"
