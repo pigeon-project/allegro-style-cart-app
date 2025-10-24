@@ -63,7 +63,8 @@ jobs:
           Break work into small, dev-friendly chunks with clear titles, actionable descriptions, acceptance criteria, \
           and use existing labels (frontend/backend). Do not create or modify files. \
           The repository already contains the runtime base. Analyze it and focus on creating issues only. \
-          Make sure to cover all requirements in the /spec directory. When creating issues via gh CLI use $GITHUB_TOKEN"
+          Make sure to cover all requirements in the /spec directory. \
+          When creating issues via gh CLI use the GITHUB_TOKEN environment variable."
 
           echo "--- PROMPT START ---"
           echo $PROMPT
