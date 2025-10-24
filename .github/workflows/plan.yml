@@ -2,9 +2,9 @@ name: Plan
 on:
   workflow_dispatch:
 
-#permissions:
-#  contents: read
-#  issues: write
+permissions:
+  contents: read
+  issues: write
   # pull-requests: write   # Uncomment if later creating PRs
 
 jobs:
@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT_NAME: ${{ github.event.repository.name }}
-      #GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GH_TOKEN: ${{ secrets.COPILOT_PAT }}
+      #GH_TOKEN: ${{ secrets.COPILOT_PAT }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,10 +51,20 @@ jobs:
 
       - name: Create issues from SPEC (non-interactive, no file writes)
         working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "--- GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
           echo "--- PROJECT_NAME: $PROJECT_NAME"
-          PROMPT="Read all files in the ./spec directory in $PROJECT_NAME. Start with ./spec/SPEC.md. Based on them create GitHub issues in the $PROJECT_NAME repo grouped by Frontend and Backend. Break work into small, dev-friendly chunks with clear titles, actionable descriptions, acceptance criteria, and use existing labels (frontend/backend). Do not create or modify files. The repository already contains the runtime base. Analyze it and focus on creating issues only. Make sure to cover all requirements in the /spec directory. When creating issues via gh CLI use GH_TOKEN"
+
+          PROMPT="Read all files in the ./spec directory in $PROJECT_NAME. Start with ./spec/SPEC.md. \
+          Based on them create GitHub issues in the $PROJECT_NAME repo grouped by Frontend and Backend. \
+          Break work into small, dev-friendly chunks with clear titles, actionable descriptions, acceptance criteria, \
+          and use existing labels (frontend/backend). Do not create or modify files. \
+          The repository already contains the runtime base. Analyze it and focus on creating issues only. \
+          Make sure to cover all requirements in the /spec directory. When creating issues via gh CLI use $GITHUB_TOKEN"
+
           echo "--- PROMPT START ---"
           echo $PROMPT
           echo "--- PROMPT END ---"
