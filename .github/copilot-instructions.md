@@ -6,6 +6,7 @@ information that does not match the info here.
 - Make sure to create a Dockerfile to run the app easily in a container.
 - If the repository does not have a `SPEC.md` file in the `/spec` directory, create one.
 - Always make sure to update `SPEC.md` in the `spec` directory when implementing new features or changing project assumptions or infrastructure decisions.
+- Make sure the new code is aligned with existing code style and architecture decisions.
 
 ## Frontend Development Rules
 
