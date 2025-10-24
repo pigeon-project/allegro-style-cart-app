@@ -53,7 +53,7 @@ jobs:
         working-directory: .
         env:
           GH_TOKEN: ${{ secrets.COPILOT_PAT }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_CLI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "--- GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
           echo "--- PROJECT_NAME: $PROJECT_NAME"
@@ -64,7 +64,7 @@ jobs:
           and use existing labels (frontend/backend). Do not create or modify files. \
           The repository already contains the runtime base. Analyze it and focus on creating issues only. \
           Make sure to cover all requirements in the /spec directory. \
-          When creating issues via gh CLI use the GITHUB_TOKEN environment variable."
+          When invoking gh CLI use the GITHUB_CLI_TOKEN environment variable."
 
           echo "--- PROMPT START ---"
           echo $PROMPT
