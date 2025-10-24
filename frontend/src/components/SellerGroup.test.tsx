@@ -94,7 +94,10 @@ describe("SellerGroup", () => {
     const user = userEvent.setup();
     render(<SellerGroup {...defaultProps} />);
 
-    const header = screen.getByTestId("seller-group-header");
+    const container = screen.getByTestId("seller-group-seller-123");
+    const header = container.querySelector(
+      '[data-testid="seller-group-header"]',
+    ) as HTMLElement;
 
     // Initially expanded, items visible
     expect(screen.getByText("Wireless Mouse")).toBeInTheDocument();
@@ -112,7 +115,10 @@ describe("SellerGroup", () => {
     const user = userEvent.setup();
     render(<SellerGroup {...defaultProps} />);
 
-    const header = screen.getByTestId("seller-group-header");
+    const container = screen.getByTestId("seller-group-seller-123");
+    const header = container.querySelector(
+      '[data-testid="seller-group-header"]',
+    ) as HTMLElement;
     header.focus();
 
     // Press Enter to collapse
@@ -128,7 +134,10 @@ describe("SellerGroup", () => {
     const user = userEvent.setup();
     render(<SellerGroup {...defaultProps} />);
 
-    const header = screen.getByTestId("seller-group-header");
+    const container = screen.getByTestId("seller-group-seller-123");
+    const header = container.querySelector(
+      '[data-testid="seller-group-header"]',
+    ) as HTMLElement;
     header.focus();
 
     // Press Space to collapse
@@ -144,7 +153,10 @@ describe("SellerGroup", () => {
     const user = userEvent.setup();
     render(<SellerGroup {...defaultProps} defaultCollapsed={true} />);
 
-    const header = screen.getByTestId("seller-group-header");
+    const container = screen.getByTestId("seller-group-seller-123");
+    const header = container.querySelector(
+      '[data-testid="seller-group-header"]',
+    ) as HTMLElement;
     header.focus();
 
     // Items not visible initially
@@ -159,7 +171,10 @@ describe("SellerGroup", () => {
     const user = userEvent.setup();
     render(<SellerGroup {...defaultProps} />);
 
-    const header = screen.getByTestId("seller-group-header");
+    const container = screen.getByTestId("seller-group-seller-123");
+    const header = container.querySelector(
+      '[data-testid="seller-group-header"]',
+    ) as HTMLElement;
     header.focus();
 
     // Items visible initially
@@ -173,7 +188,10 @@ describe("SellerGroup", () => {
   it("has proper ARIA attributes", () => {
     render(<SellerGroup {...defaultProps} />);
 
-    const header = screen.getByTestId("seller-group-header");
+    const container = screen.getByTestId("seller-group-seller-123");
+    const header = container.querySelector(
+      '[data-testid="seller-group-header"]',
+    ) as HTMLElement;
 
     expect(header).toHaveAttribute("aria-expanded", "true");
     expect(header).toHaveAttribute("aria-controls");
@@ -183,7 +201,10 @@ describe("SellerGroup", () => {
     const user = userEvent.setup();
     render(<SellerGroup {...defaultProps} />);
 
-    const header = screen.getByTestId("seller-group-header");
+    const container = screen.getByTestId("seller-group-seller-123");
+    const header = container.querySelector(
+      '[data-testid="seller-group-header"]',
+    ) as HTMLElement;
 
     // Initially expanded
     expect(header).toHaveAttribute("aria-expanded", "true");
@@ -286,7 +307,10 @@ describe("SellerGroup", () => {
     const user = userEvent.setup();
     render(<SellerGroup {...defaultProps} />);
 
-    const header = screen.getByTestId("seller-group-header");
+    const container = screen.getByTestId("seller-group-seller-123");
+    const header = container.querySelector(
+      '[data-testid="seller-group-header"]',
+    ) as HTMLElement;
     const icon = header.querySelector("svg");
 
     // Initially expanded, no rotation

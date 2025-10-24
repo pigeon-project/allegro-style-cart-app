@@ -112,7 +112,7 @@ export default function SellerGroup({
 
           {/* Master Checkbox (visual only for now) */}
           <div
-            className="flex items-center justify-center w-5 h-5 border-2 border-border rounded bg-surface"
+            className="flex items-center justify-center w-5 h-5 border-2 border-border rounded bg-white dark:bg-navy-600"
             role="presentation"
             aria-hidden="true"
           >
