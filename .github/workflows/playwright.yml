@@ -21,7 +21,7 @@ jobs:
       - name: Run Playwright tests
         run: PLAYWRIGHT_JSON_OUTPUT_NAME=results.json npx playwright test --reporter=json
         working-directory: ./frontend
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
