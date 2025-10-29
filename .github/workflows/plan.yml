@@ -55,11 +55,20 @@ jobs:
           Produce a JSON Lines list (one JSON object per line) of planned GitHub issues into the 'planned_issues.jsonl' file. \n
           Each object MUST have: title, body, labels (array). \n
           Use only labels: frontend or backend (choose at least one). \n
-          Body have to include: \n
+          BODY MUST INCLUDE: \n
           - the issue description \n
           - a bullet list of acceptance criteria \n
           - references to relevant specification sections \n
-          - hardcoded sentence: 'Start with the development branch and create pull request to it as well'. \n
+          - at the end of body append EXACT sentence: 'Start with the development branch and create pull request to it as well'. \n
+          BODY FORMAT STRICT RULES: \
+          1) body MUST be a SINGLE LINE (no raw newline characters).\n
+          2) Represent logical line breaks using the two characters \\n (backslash+n). \n
+          3) Do NOT use any double quotes; replace them with single quotes.\n
+          4) Bullets are separated by \\n (backslash+n). \n
+          5) No backticks, no code fences. \n
+
+          Do NOT create GitHub issues. Output ONLY valid JSON Lines with no extra commentary to 'planned_issues.jsonl'. \
+          Print the same JSON Lines to standard output as they are written to the file."
           Do NOT create Github issues. Output ONLY valid JSON Lines with no extra commentary to the 'planned_issues.jsonl' file. \n
           When writing to the file, print also to standard output for logging purposes."
 
