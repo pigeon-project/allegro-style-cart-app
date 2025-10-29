@@ -41,4 +41,40 @@ Users adding and reviewing items prior to checkout.
 ## Non-Functional Requirements (Reference)
 This product relies on the shared organization-wide Non-Functional Requirements: [Shared NFR](SHARED-NFR.md)
 
+## Technical Infrastructure
+
+### Backend Architecture
+- **Language & Runtime**: Java 25 with Virtual Threads enabled for improved concurrency
+- **Framework**: Spring Boot 3.5.6
+- **Package Layout**: Feature-based with limited visibility (only Commands/Queries facades are public)
+- **Architecture Enforcement**: ArchUnit tests validate architectural patterns
+
+### Database Configuration
+- **Development**: H2 in-memory database (jdbc:h2:mem:testdb)
+- **Production**: JDBC-compatible database (MySQL/PostgreSQL) via environment variables:
+  - `JDBC_DATABASE_URL`
+  - `JDBC_DATABASE_USERNAME`
+  - `JDBC_DATABASE_PASSWORD`
+- **ORM**: Spring Data JPA with Hibernate
+- **Connection Pooling**: HikariCP (default in Spring Boot)
+
+### Session Management
+- **Type**: JDBC-based HTTP sessions (Spring Session)
+- **Development**: H2 schema automatically initialized
+- **Production**: MySQL schema used (schema-mysql.sql)
+- **Benefits**: Horizontal scalability, session persistence across restarts
+
+### Observability
+- **Health Endpoints**: `/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness`
+- **Monitoring**: Spring Boot Actuator with health probes enabled
+- **Logging**: Structured JSON format with timestamp, level, service, environment, thread, logger, message, exception
+- **Documentation**: SpringDoc OpenAPI (Swagger UI available)
+
+### Security
+- **Authentication**: 
+  - Development: Form-based login with in-memory user (admin/password)
+  - Production: OAuth2 Resource Server with JWT validation
+- **Authorization**: Enforced on all `/api/**` and `/` endpoints
+- **Session**: CSRF protection disabled for REST APIs, session management via Spring Session JDBC
+
 ---
