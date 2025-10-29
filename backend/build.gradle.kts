@@ -15,8 +15,10 @@ dependencies {
     implementation(libs.springdoc)
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.data.jdbc)
+    implementation(libs.spring.session.jdbc)
 
     runtimeOnly(libs.h2)
+    runtimeOnly(libs.mysql.connector)
     testRuntimeOnly(libs.junit.platform.launcher)
 
     testImplementation(libs.spring.boot.starter.test)
