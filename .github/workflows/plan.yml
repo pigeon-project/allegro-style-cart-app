@@ -5,14 +5,12 @@ on:
 permissions:
   contents: read
   issues: write
-  # pull-requests: write   # Uncomment if later creating PRs
 
 jobs:
   plan:
     runs-on: ubuntu-latest
     env:
       PROJECT_NAME: ${{ github.event.repository.name }}
-      #GH_TOKEN: ${{ secrets.COPILOT_PAT }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
@@ -49,28 +47,78 @@ jobs:
           gh label create frontend --description "Frontend development tasks" --color "1D76DB" 2>/dev/null || true
           gh label create backend  --description "Backend development tasks"  --color "0E8A16" 2>/dev/null || true
 
-      - name: Create issues from SPEC (non-interactive, no file writes)
+      - name: Plan work
         working-directory: .
         env:
           GH_TOKEN: ${{ secrets.COPILOT_PAT }}
-          GITHUB_CLI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "--- GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
-          echo "--- PROJECT_NAME: $PROJECT_NAME"
+          PROMPT="Read all files under ./spec starting from ./spec/SPEC.md for repository '$PROJECT_NAME'. \n
+          Break work into small, developer-friendly chunks. \n
+          Each chunk should correspond to a GitHub issue with a clear title, detailed description, acceptance criteria, \n
+          labels, and references to the specification part which is realized by this issue. \n
+          The repository already contains the runtime base. Analyze it and focus on creating issues only. \n
+          Ensure all requirements from the specification are covered. \n\
+          Focus solely on the planning part. \n\n
 
-          PROMPT="Read all files in the ./spec directory in $PROJECT_NAME. Start with ./spec/SPEC.md. \
-          Based on them create GitHub issues in the $PROJECT_NAME repo grouped by Frontend and Backend. \
-          Break work into small, dev-friendly chunks with clear titles, actionable descriptions, acceptance criteria, \
-          and use existing labels (frontend/backend). Do not create or modify files. \
-          The repository already contains the runtime base. Analyze it and focus on creating issues only. \
-          Make sure to cover all requirements in the /spec directory. \
-          When invoking gh CLI use the GITHUB_CLI_TOKEN environment variable."
+          OUTPUT: \n
+          Produce a JSON Lines list (one JSON object per line) of planned GitHub issues into the 'planned_issues.jsonl' file. \n
+          Each object MUST have: title, body, labels (array). \n
+          Use only labels: frontend or backend (choose at least one). \n
+          Body have to include: \n
+          - the issue description \n
+          - a bullet list of acceptance criteria \n
+          - references to relevant specification sections \n
+          - hardcoded sentence: 'Start with the development branch and create pull request to it as well'. \n
+          Do NOT create Github issues. Output ONLY valid JSON Lines with no extra commentary to the 'planned_issues.jsonl' file. \n
+          When writing to the file, print also to standard output for logging purposes."
+          copilot -p "${PROMPT}" --allow-all-tools --deny-tool 'shell(rm)' --deny-tool 'shell(sudo)'
 
-          echo "--- PROMPT START ---"
-          echo $PROMPT
-          echo "--- PROMPT END ---"
-          copilot \
-            -p "${PROMPT}" \
-            --allow-all-tools \
-            --deny-tool 'shell(rm)' \
-            --deny-tool 'shell(sudo)'
+          if [ ! -s planned_issues.jsonl ]; then
+            echo "::error::planned_issues.jsonl is empty"
+            exit 1
+          fi
+
+          echo "Planned issues count:"
+          wc -l planned_issues.jsonl
+          echo "First 3 lines preview:"
+          head -n 3 planned_issues.jsonl
+
+          # Validate json structure for the first 5 lines
+          head -n 5 planned_issues.jsonl | jq -e '.title,.body,.labels' >/dev/null || {
+            echo "::error::JSON structure validation failed"
+            exit 1
+          }
+
+      - name: Create Github issues
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -f planned_issues.jsonl ]; then
+            echo "::error::planned_issues.jsonl missing"
+            exit 1
+          fi
+
+          CREATED=0
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            TITLE=$(echo "$line" | jq -r '.title // empty')
+            BODY=$(echo "$line" | jq -r '.body // empty')
+            LABELS=$(echo "$line" | jq -r '.labels | join(",")')
+            if [ -z "$TITLE" ]; then
+              echo "::warning::Skipping line without title"
+              continue
+            fi
+            echo "Creating issue: $TITLE"
+            CMD="gh issue create --repo \"$PROJECT_NAME\" --title \"$TITLE\" --body \"$BODY\""
+            if [ -n "$LABELS" ]; then
+              CMD="$CMD --label \"$LABELS\""
+            fi
+            eval $CMD && CREATED=$((CREATED+1)) || echo "::error::Failed to create issue: $TITLE"
+            sleep 1
+          done < planned_issues.jsonl
+
+          echo "Total created issues: $CREATED"
+          if [ "$CREATED" -eq 0 ]; then
+            echo "::warning::No issues created"
+          fi
