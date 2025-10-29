@@ -67,6 +67,9 @@ class CartRepositoryImpl implements CartRepository {
     @Override
     @Transactional
     public void updateCartItemQuantity(UUID itemId, int quantity) {
+        if (quantity < 1 || quantity > 99) {
+            throw new IllegalArgumentException("Quantity must be between 1 and 99");
+        }
         persistedCartItemRepository.findById(itemId).ifPresent(item -> {
             item.setQuantity(quantity);
             persistedCartItemRepository.save(item);

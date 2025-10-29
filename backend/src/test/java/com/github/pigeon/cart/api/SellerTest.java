@@ -45,4 +45,12 @@ class SellerTest {
                 new Seller(UUID.randomUUID(), "   ")
         );
     }
+
+    @Test
+    @DisplayName("Should reject null seller ID")
+    void shouldRejectNullSellerId() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new Seller(null, "Test Seller")
+        );
+    }
 }

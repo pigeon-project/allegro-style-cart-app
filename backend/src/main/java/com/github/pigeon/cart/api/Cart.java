@@ -7,6 +7,9 @@ public record Cart(
         String userId
 ) {
     public Cart {
+        if (id == null) {
+            throw new IllegalArgumentException("Cart ID cannot be null");
+        }
         if (userId == null || userId.isBlank()) {
             throw new IllegalArgumentException("User ID cannot be blank");
         }

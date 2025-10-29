@@ -45,4 +45,12 @@ class CartTest {
                 new Cart(UUID.randomUUID(), "   ")
         );
     }
+
+    @Test
+    @DisplayName("Should reject null cart ID")
+    void shouldRejectNullCartId() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new Cart(null, "user123")
+        );
+    }
 }

@@ -13,6 +13,15 @@ public record CartItem(
         int quantity
 ) {
     public CartItem {
+        if (id == null) {
+            throw new IllegalArgumentException("Cart item ID cannot be null");
+        }
+        if (cartId == null) {
+            throw new IllegalArgumentException("Cart ID cannot be null");
+        }
+        if (sellerId == null) {
+            throw new IllegalArgumentException("Seller ID cannot be null");
+        }
         if (productTitle == null || productTitle.isBlank()) {
             throw new IllegalArgumentException("Product title cannot be blank");
         }

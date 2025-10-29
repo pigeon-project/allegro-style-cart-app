@@ -43,7 +43,7 @@ class CartItemTest {
 
         BigDecimal total = cartItem.totalPrice();
 
-        assertEquals(new BigDecimal("31.50"), total);
+        assertEquals(0, new BigDecimal("31.50").compareTo(total));
     }
 
     @Test
@@ -137,5 +137,32 @@ class CartItemTest {
 
         assertNotNull(cartItem);
         assertNull(cartItem.productImage());
+    }
+
+    @Test
+    @DisplayName("Should reject null cart item ID")
+    void shouldRejectNullCartItemId() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new CartItem(null, UUID.randomUUID(), UUID.randomUUID(),
+                        "image.jpg", "Product", new BigDecimal("10.00"), 1)
+        );
+    }
+
+    @Test
+    @DisplayName("Should reject null cart ID")
+    void shouldRejectNullCartId() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new CartItem(UUID.randomUUID(), null, UUID.randomUUID(),
+                        "image.jpg", "Product", new BigDecimal("10.00"), 1)
+        );
+    }
+
+    @Test
+    @DisplayName("Should reject null seller ID")
+    void shouldRejectNullSellerId() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new CartItem(UUID.randomUUID(), UUID.randomUUID(), null,
+                        "image.jpg", "Product", new BigDecimal("10.00"), 1)
+        );
     }
 }
