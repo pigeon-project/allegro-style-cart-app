@@ -58,7 +58,7 @@ jobs:
           Body MUST include:
           - Description paragraph.
           - '## Acceptance Criteria' heading with bullet list (- item).
-          - '## References' heading referencing specification sections.
+          - '## References' heading with bullet list (- item) of references to relevant specification sections in the spec directory which are realized within this issue.
           - Final line EXACT: 'Start with the development branch and create pull request to it as well.'
           
           Rules:
@@ -72,7 +72,7 @@ jobs:
           echo "$PROMPT"
           echo "--- PROMPT END ---"
           
-          copilot -p "${PROMPT}" --allow-all-tools --deny-tool 'shell(rm)' --deny-tool 'shell(sudo)'
+          copilot -p "${PROMPT}" --allow-all-tools --deny-tool 'shell(rm)' --deny-tool 'shell(sudo)' --model claude-sonnet-4.5
 
           COUNT=$(ls issues/issue_*.md 2>/dev/null | wc -l | tr -d ' ')
           if [ "$COUNT" -eq 0 ]; then
