@@ -39,89 +39,51 @@ jobs:
           gh label create frontend --description "Frontend development tasks" --color "1D76DB" 2>/dev/null || true
           gh label create backend  --description "Backend development tasks"  --color "0E8A16" 2>/dev/null || true
 
+      - name: Create dir for issues if not exists
+        run: mkdir -p issues
       - name: Plan work
         working-directory: .
         env:
           GH_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
-          PROMPT="Read all files under ./spec starting from ./spec/SPEC.md for repository \"$GITHUB_REPOSITORY\". \n
-          Break work into small, developer-friendly chunks. \n
-          Each chunk should correspond to a GitHub issue with a clear title, detailed description, acceptance criteria, \n
-          labels, and references to the specification part which is realized by this issue. \n
-          The repository already contains the runtime base. Analyze it and focus on creating issues only. \n
-          Ensure all requirements from the specification are covered. \n\
-          Focus solely on the planning part. \n\n
-          OUTPUT: \n
-          Produce a JSON Lines list (one JSON object per line) of planned GitHub issues into the 'planned_issues.jsonl' file. \n
-          Each object MUST have: title, body, labels (array). \n
-          Use only labels: frontend or backend (choose at least one). \n
-          BODY MUST INCLUDE: \n
-          - the issue description \n
-          - a bullet list of acceptance criteria \n
-          - references to relevant specification sections \n
-          - at the end of body append EXACT sentence: 'Start with the development branch and create pull request to it as well'. \n
-          BODY FORMAT STRICT RULES: \n
-          1) body MUST be a SINGLE LINE (no raw newline characters).\n
-          2) Represent logical line breaks using the two characters \\n (backslash+n). \n
-          3) Do NOT use any double quotes; replace them with single quotes.\n
-          4) Bullets are separated by \\n (backslash+n). \n
-          5) No backticks, no code fences. \n
-
-          Do NOT create Github issues. Output ONLY valid JSON Lines with no extra commentary to the 'planned_issues.jsonl' file. \n
-          When writing to the file, print also to standard output for logging purposes."
-
+          PROMPT="Read all files under ./spec starting from ./spec/SPEC.md for repository '$GITHUB_REPOSITORY'. 
+          Break the required work into small, developer-friendly chunks.
+          For each chunk produce ONE markdown file inside ./issues named issue_<n>.md (starting at 1, continuous numbering).
+          FILE FORMAT:
+          labels: comma-separated labels from set {frontend,backend}
+          title: <concise issue title without quotes>
+          body:
+          <rich markdown body, may contain headings, bullet lists, blank lines>
+          
+          Body MUST include:
+          - Description paragraph.
+          - '## Acceptance Criteria' heading with bullet list (- item).
+          - '## References' heading referencing specification sections.
+          - Final line EXACT: 'Start with the development branch and create pull request to it as well.'
+          
+          Rules:
+          - Do NOT output anything else outside the issue_*.md files.
+          - Ensure every SPEC requirement (including responsiveness) is covered by at least one issue.
+          - Maintain ordering so dependencies have lower numbers.
+          
+          Print files while creating them for logging."
+          
           echo "--- PROMPT START ---"
-          echo -e "$PROMPT"
+          echo "$PROMPT"
           echo "--- PROMPT END ---"
-
+          
           copilot -p "${PROMPT}" --allow-all-tools --deny-tool 'shell(rm)' --deny-tool 'shell(sudo)'
 
-          if [ ! -s planned_issues.jsonl ]; then
-            echo "::error::planned_issues.jsonl is empty"
+          COUNT=$(ls issues/issue_*.md 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$COUNT" -eq 0 ]; then
+            echo "::error::No issue_*.md files generated"
+            ls -al issues
             exit 1
           fi
 
-          echo "Planned issues count:"
-          wc -l planned_issues.jsonl
-          echo "First 3 lines preview:"
-          head -n 3 planned_issues.jsonl
-
-          # Validate json structure for the first 5 lines
-          head -n 5 planned_issues.jsonl | jq -e '.title,.body,.labels' >/dev/null || {
-            echo "::error::JSON structure validation failed"
-            exit 1
-          }
+          echo "Generated $COUNT issue files."
 
       - name: Create Github issues
         working-directory: .
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ ! -f planned_issues.jsonl ]; then
-            echo "::error::planned_issues.jsonl missing"
-            exit 1
-          fi
-
-          CREATED=0
-          while IFS= read -r line; do
-            [ -z "$line" ] && continue
-            TITLE=$(echo "$line" | jq -r '.title // empty')
-            BODY=$(echo "$line" | jq -r '.body // empty')
-            LABELS=$(echo "$line" | jq -r '.labels | join(",")')
-            if [ -z "$TITLE" ]; then
-              echo "::warning::Skipping line without title"
-              continue
-            fi
-            echo "Creating issue: $TITLE"
-            CMD="gh issue create --repo \"$GITHUB_REPOSITORY\" --title \"$TITLE\" --body \"$BODY\""
-            if [ -n "$LABELS" ]; then
-              CMD="$CMD --label \"$LABELS\""
-            fi
-            eval $CMD && CREATED=$((CREATED+1)) || echo "::error::Failed to create issue: $TITLE"
-            sleep 1
-          done < planned_issues.jsonl
-
-          echo "Total created issues: $CREATED"
-          if [ "$CREATED" -eq 0 ]; then
-            echo "::warning::No issues created"
-          fi
+          python3 .github/scripts/create_issues.py
