@@ -77,4 +77,52 @@ This product relies on the shared organization-wide Non-Functional Requirements:
 - **Authorization**: Enforced on all `/api/**` and `/` endpoints
 - **Session**: CSRF protection disabled for REST APIs, session management via Spring Session JDBC
 
+## Domain Model Implementation
+
+### Cart Domain
+The cart functionality is implemented following the feature-based architecture pattern with clear separation between domain and persistence layers.
+
+#### Domain Models (Records)
+- **Cart**: Represents a user's shopping cart
+  - `id` (UUID): Unique cart identifier
+  - `userId` (String): Owner of the cart
+- **CartItem**: Represents a product in the cart
+  - `id` (UUID): Unique item identifier
+  - `cartId` (UUID): Reference to parent cart
+  - `sellerId` (UUID): Reference to seller
+  - `productImage` (String, optional): Product thumbnail URL
+  - `productTitle` (String, required): Product name/title
+  - `pricePerUnit` (BigDecimal, required): Price per single unit
+  - `quantity` (int, 1-99): Number of items (validated)
+  - `totalPrice()` method: Calculates price * quantity
+- **Seller**: Represents a marketplace seller
+  - `id` (UUID): Unique seller identifier
+  - `name` (String): Seller name
+
+#### Data Integrity
+Following SHARED-NFR Section 10 requirements:
+- **Primary Keys**: All entities use UUID primary keys with `@GeneratedValue(strategy = GenerationType.UUID)`
+- **Foreign Keys**: CartItem references Cart via `cartId` and Seller via `sellerId` (enforced via JPA relationships)
+- **Uniqueness Constraints**: 
+  - Cart has unique constraint on `user_id` (one cart per user)
+  - Seller has unique constraint on `name`
+- **Validation Constraints**:
+  - Quantity: Min=1, Max=99 (enforced at domain and entity level)
+  - Non-null constraints on required fields
+  - Length limits on text fields (productTitle: 500, sellerName: 200)
+- **Timestamps**: All entities include `created_at` and `updated_at` with automatic management via `@PrePersist` and `@PreUpdate`
+- **Indexes**: CartItem table includes indexes on `cart_id` and `seller_id` for efficient queries
+
+#### Repository Layer
+Split between domain and database implementations:
+- **CartRepository** (interface in `cart.api` package): Domain repository contract
+- **CartRepositoryImpl**: Bridges domain and persistence layers
+- **PersistedCart/CartItem/Seller**: JPA entities with validation
+- **PersistedCart/CartItem/SellerRepository**: Spring Data JPA repositories
+
+#### Facades
+Public API exposed via:
+- **CartCommands**: Create cart, add/update/remove items, create sellers
+- **CartQueries**: Retrieve cart, items, sellers (by various criteria)
+
 ---
