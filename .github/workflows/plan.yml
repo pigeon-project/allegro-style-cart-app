@@ -10,7 +10,6 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     env:
-      PROJECT_NAME: ${{ github.event.repository.name }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
@@ -20,13 +19,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Create a test issue to verify permissions
-        run: |
-          gh issue create --repo pigeon-project/allegro-style-cart-app --title "Test Issue for Permissions" --body "This is a test issue to verify that the workflow has permission to create issues." || {
-            echo "::error::Failed to create test issue. Check repository permissions."
-            exit 1
-          }
 
       - name: Install Copilot CLI
         run: npm install -g @github/copilot
@@ -52,7 +44,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
-          PROMPT="Read all files under ./spec starting from ./spec/SPEC.md for repository \"$PROJECT_NAME\". \n
+          PROMPT="Read all files under ./spec starting from ./spec/SPEC.md for repository \"$GITHUB_REPOSITORY\". \n
           Break work into small, developer-friendly chunks. \n
           Each chunk should correspond to a GitHub issue with a clear title, detailed description, acceptance criteria, \n
           labels, and references to the specification part which is realized by this issue. \n
@@ -71,54 +63,59 @@ jobs:
           - hardcoded sentence: 'Start with the development branch and create pull request to it as well'. \n
           Do NOT create Github issues. Output ONLY valid JSON Lines with no extra commentary to the 'planned_issues.jsonl' file. \n
           When writing to the file, print also to standard output for logging purposes."
-          copilot -p "${PROMPT}" --allow-all-tools --deny-tool 'shell(rm)' --deny-tool 'shell(sudo)'
+          
+          echo "--- PROMPT START ---"
+          echo -e "$PROMPT"
+          echo "--- PROMPT END ---"
 
-          if [ ! -s planned_issues.jsonl ]; then
-            echo "::error::planned_issues.jsonl is empty"
-            exit 1
-          fi
-
-          echo "Planned issues count:"
-          wc -l planned_issues.jsonl
-          echo "First 3 lines preview:"
-          head -n 3 planned_issues.jsonl
-
-          # Validate json structure for the first 5 lines
-          head -n 5 planned_issues.jsonl | jq -e '.title,.body,.labels' >/dev/null || {
-            echo "::error::JSON structure validation failed"
-            exit 1
-          }
-
-      - name: Create Github issues
-        working-directory: .
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ ! -f planned_issues.jsonl ]; then
-            echo "::error::planned_issues.jsonl missing"
-            exit 1
-          fi
-
-          CREATED=0
-          while IFS= read -r line; do
-            [ -z "$line" ] && continue
-            TITLE=$(echo "$line" | jq -r '.title // empty')
-            BODY=$(echo "$line" | jq -r '.body // empty')
-            LABELS=$(echo "$line" | jq -r '.labels | join(",")')
-            if [ -z "$TITLE" ]; then
-              echo "::warning::Skipping line without title"
-              continue
-            fi
-            echo "Creating issue: $TITLE"
-            CMD="gh issue create --repo \"$PROJECT_NAME\" --title \"$TITLE\" --body \"$BODY\""
-            if [ -n "$LABELS" ]; then
-              CMD="$CMD --label \"$LABELS\""
-            fi
-            eval $CMD && CREATED=$((CREATED+1)) || echo "::error::Failed to create issue: $TITLE"
-            sleep 1
-          done < planned_issues.jsonl
-
-          echo "Total created issues: $CREATED"
-          if [ "$CREATED" -eq 0 ]; then
-            echo "::warning::No issues created"
-          fi
+#          copilot -p "${PROMPT}" --allow-all-tools --deny-tool 'shell(rm)' --deny-tool 'shell(sudo)'
+#
+#          if [ ! -s planned_issues.jsonl ]; then
+#            echo "::error::planned_issues.jsonl is empty"
+#            exit 1
+#          fi
+#
+#          echo "Planned issues count:"
+#          wc -l planned_issues.jsonl
+#          echo "First 3 lines preview:"
+#          head -n 3 planned_issues.jsonl
+#
+#          # Validate json structure for the first 5 lines
+#          head -n 5 planned_issues.jsonl | jq -e '.title,.body,.labels' >/dev/null || {
+#            echo "::error::JSON structure validation failed"
+#            exit 1
+#          }
+#
+#      - name: Create Github issues
+#        working-directory: .
+#        env:
+#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          if [ ! -f planned_issues.jsonl ]; then
+#            echo "::error::planned_issues.jsonl missing"
+#            exit 1
+#          fi
+#
+#          CREATED=0
+#          while IFS= read -r line; do
+#            [ -z "$line" ] && continue
+#            TITLE=$(echo "$line" | jq -r '.title // empty')
+#            BODY=$(echo "$line" | jq -r '.body // empty')
+#            LABELS=$(echo "$line" | jq -r '.labels | join(",")')
+#            if [ -z "$TITLE" ]; then
+#              echo "::warning::Skipping line without title"
+#              continue
+#            fi
+#            echo "Creating issue: $TITLE"
+#            CMD="gh issue create --repo \"$GITHUB_REPOSITORY\" --title \"$TITLE\" --body \"$BODY\""
+#            if [ -n "$LABELS" ]; then
+#              CMD="$CMD --label \"$LABELS\""
+#            fi
+#            eval $CMD && CREATED=$((CREATED+1)) || echo "::error::Failed to create issue: $TITLE"
+#            sleep 1
+#          done < planned_issues.jsonl
+#
+#          echo "Total created issues: $CREATED"
+#          if [ "$CREATED" -eq 0 ]; then
+#            echo "::warning::No issues created"
+#          fi
