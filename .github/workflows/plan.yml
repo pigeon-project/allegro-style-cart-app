@@ -51,7 +51,6 @@ jobs:
           The repository already contains the runtime base. Analyze it and focus on creating issues only. \n
           Ensure all requirements from the specification are covered. \n\
           Focus solely on the planning part. \n\n
-
           OUTPUT: \n
           Produce a JSON Lines list (one JSON object per line) of planned GitHub issues into the 'planned_issues.jsonl' file. \n
           Each object MUST have: title, body, labels (array). \n
@@ -63,59 +62,59 @@ jobs:
           - hardcoded sentence: 'Start with the development branch and create pull request to it as well'. \n
           Do NOT create Github issues. Output ONLY valid JSON Lines with no extra commentary to the 'planned_issues.jsonl' file. \n
           When writing to the file, print also to standard output for logging purposes."
-          
+
           echo "--- PROMPT START ---"
           echo -e "$PROMPT"
           echo "--- PROMPT END ---"
 
-#          copilot -p "${PROMPT}" --allow-all-tools --deny-tool 'shell(rm)' --deny-tool 'shell(sudo)'
-#
-#          if [ ! -s planned_issues.jsonl ]; then
-#            echo "::error::planned_issues.jsonl is empty"
-#            exit 1
-#          fi
-#
-#          echo "Planned issues count:"
-#          wc -l planned_issues.jsonl
-#          echo "First 3 lines preview:"
-#          head -n 3 planned_issues.jsonl
-#
-#          # Validate json structure for the first 5 lines
-#          head -n 5 planned_issues.jsonl | jq -e '.title,.body,.labels' >/dev/null || {
-#            echo "::error::JSON structure validation failed"
-#            exit 1
-#          }
-#
-#      - name: Create Github issues
-#        working-directory: .
-#        env:
-#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          if [ ! -f planned_issues.jsonl ]; then
-#            echo "::error::planned_issues.jsonl missing"
-#            exit 1
-#          fi
-#
-#          CREATED=0
-#          while IFS= read -r line; do
-#            [ -z "$line" ] && continue
-#            TITLE=$(echo "$line" | jq -r '.title // empty')
-#            BODY=$(echo "$line" | jq -r '.body // empty')
-#            LABELS=$(echo "$line" | jq -r '.labels | join(",")')
-#            if [ -z "$TITLE" ]; then
-#              echo "::warning::Skipping line without title"
-#              continue
-#            fi
-#            echo "Creating issue: $TITLE"
-#            CMD="gh issue create --repo \"$GITHUB_REPOSITORY\" --title \"$TITLE\" --body \"$BODY\""
-#            if [ -n "$LABELS" ]; then
-#              CMD="$CMD --label \"$LABELS\""
-#            fi
-#            eval $CMD && CREATED=$((CREATED+1)) || echo "::error::Failed to create issue: $TITLE"
-#            sleep 1
-#          done < planned_issues.jsonl
-#
-#          echo "Total created issues: $CREATED"
-#          if [ "$CREATED" -eq 0 ]; then
-#            echo "::warning::No issues created"
-#          fi
+          copilot -p "${PROMPT}" --allow-all-tools --deny-tool 'shell(rm)' --deny-tool 'shell(sudo)'
+
+          if [ ! -s planned_issues.jsonl ]; then
+            echo "::error::planned_issues.jsonl is empty"
+            exit 1
+          fi
+
+          echo "Planned issues count:"
+          wc -l planned_issues.jsonl
+          echo "First 3 lines preview:"
+          head -n 3 planned_issues.jsonl
+
+          # Validate json structure for the first 5 lines
+          head -n 5 planned_issues.jsonl | jq -e '.title,.body,.labels' >/dev/null || {
+            echo "::error::JSON structure validation failed"
+            exit 1
+          }
+
+      - name: Create Github issues
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -f planned_issues.jsonl ]; then
+            echo "::error::planned_issues.jsonl missing"
+            exit 1
+          fi
+
+          CREATED=0
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            TITLE=$(echo "$line" | jq -r '.title // empty')
+            BODY=$(echo "$line" | jq -r '.body // empty')
+            LABELS=$(echo "$line" | jq -r '.labels | join(",")')
+            if [ -z "$TITLE" ]; then
+              echo "::warning::Skipping line without title"
+              continue
+            fi
+            echo "Creating issue: $TITLE"
+            CMD="gh issue create --repo \"$GITHUB_REPOSITORY\" --title \"$TITLE\" --body \"$BODY\""
+            if [ -n "$LABELS" ]; then
+              CMD="$CMD --label \"$LABELS\""
+            fi
+            eval $CMD && CREATED=$((CREATED+1)) || echo "::error::Failed to create issue: $TITLE"
+            sleep 1
+          done < planned_issues.jsonl
+
+          echo "Total created issues: $CREATED"
+          if [ "$CREATED" -eq 0 ]; then
+            echo "::warning::No issues created"
+          fi
