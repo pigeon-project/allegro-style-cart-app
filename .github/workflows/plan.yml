@@ -52,7 +52,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
-          PROMPT="Read all files under ./spec starting from ./spec/SPEC.md for repository '$PROJECT_NAME'. \n
+          PROMPT="Read all files under ./spec starting from ./spec/SPEC.md for repository \"$PROJECT_NAME\". \n
           Break work into small, developer-friendly chunks. \n
           Each chunk should correspond to a GitHub issue with a clear title, detailed description, acceptance criteria, \n
           labels, and references to the specification part which is realized by this issue. \n
