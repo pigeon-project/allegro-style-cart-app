@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-REQUIRED_FINAL_LINE = "Start with the development branch and create pull request to it as well."
+REQUIRED_LINE = "Start with the development branch and create pull request to it as well"
 ISSUES_DIR = Path("issues")
 PATTERN = re.compile(r"issue_(\d+)\.md$")
 
@@ -28,27 +28,38 @@ def find_issue_files():
     return [f for _, f in sorted(files, key=lambda x: x[0])]
 
 def parse_issue(file_path: Path):
+    """
+    Parsing issue file:
+    - labels: the first line starting with 'labels:'
+    - title: the first line starting with 'title:'
+    - body: everything after the 'body:' (content may be inline or on following lines)
+    """
     labels = title = None
     body_lines = []
-    in_body = False
+    body_found = False
     with file_path.open("r", encoding="utf-8") as fh:
-        for line in fh:
-            stripped = line.rstrip("\n")
-            if labels is None and stripped.startswith("labels:"):
-                labels = stripped[len("labels:"):].strip()
+        for raw_line in fh:
+            line = raw_line.rstrip("\n")
+            if labels is None and line.startswith("labels:"):
+                labels = line[len("labels:"):].strip()
                 continue
-            if title is None and stripped.startswith("title:"):
-                title = stripped[len("title:"):].strip()
+            if title is None and line.startswith("title:"):
+                title = line[len("title:"):].strip()
                 continue
-            if stripped == "body:" and not in_body:
-                in_body = True
-                continue
-            if in_body:
-                body_lines.append(line)
+            if not body_found:
+                m = re.match(r"^body:\s*(.*)$", line)
+                if m:
+                    body_found = True
+                    inline = m.group(1)
+                    if inline:
+                        body_lines.append(inline + "\n")
+                    continue
+            else:
+                body_lines.append(raw_line)
     body_text = "".join(body_lines).rstrip()
-    return labels, title, body_text
+    return labels, title, body_text, body_found
 
-def validate_issue(labels, title, body_text, file_path: Path):
+def validate_issue(labels, title, body_text, file_path: Path, body_found: bool):
     ok = True
     if labels is None:
         error(f"{file_path}: missing labels line")
@@ -56,17 +67,15 @@ def validate_issue(labels, title, body_text, file_path: Path):
     if not title:
         error(f"{file_path}: missing title")
         ok = False
-    if not body_text:
+    if not body_found:
+        error(f"{file_path}: missing body: line")
+        ok = False
+    elif not body_text.strip():
         error(f"{file_path}: empty body")
         ok = False
-    # Last non-empty line must match required sentence
-    last_line = ""
-    for line in body_text.splitlines()[::-1]:
-        if line.strip():
-            last_line = line.strip()
-            break
-    if last_line != REQUIRED_FINAL_LINE:
-        error(f"{file_path}: final line mismatch (got: '{last_line}')")
+    # Body must contain the required sentence
+    if body_text.find(REQUIRED_LINE) == -1:
+        error(f"{file_path}: body must contain the required line")
         ok = False
     return ok
 
@@ -105,8 +114,8 @@ def main():
         return 1
     created = 0
     for fp in issue_files:
-        labels, title, body = parse_issue(fp)
-        if not validate_issue(labels, title, body, fp):
+        labels, title, body, body_found = parse_issue(fp)
+        if not validate_issue(labels, title, body, fp, body_found):
             warning(f"Skipping {fp} due to validation errors")
             continue
         if create_issue(repo, labels, title, body):

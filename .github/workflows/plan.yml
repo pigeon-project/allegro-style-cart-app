@@ -80,8 +80,13 @@ jobs:
             ls -al issues
             exit 1
           fi
-
           echo "Generated $COUNT issue files."
+          echo "==== Issue files preview ===="
+          for f in $(ls issues/issue_*.md | sort -V); do
+            echo "--- $f ---"
+            sed -n '1,40p' "$f"
+            echo
+          done
 
       - name: Create Github issues
         working-directory: .
