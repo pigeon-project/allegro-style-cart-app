@@ -7,7 +7,7 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import pluginQuery from "@tanstack/eslint-plugin-query";
 
 export default tseslint.config(
-  { ignores: ["dist", "build"] },
+  { ignores: ["dist", "build", "src/api-types.ts"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginQuery.configs["flat/recommended"],

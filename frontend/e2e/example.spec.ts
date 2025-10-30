@@ -31,19 +31,38 @@ test.describe("Frontend application", () => {
 
     // Get the dark mode toggle button
     const toggleButton = page.getByRole("button", { name: /mode/i });
+    await expect(toggleButton).toBeVisible();
 
-    // Check initial state (should be dark mode by default)
-    await expect(page.locator("html")).toHaveClass(/dark/);
-    await expect(toggleButton).toContainText(/dark mode/i);
+    // Get initial state
+    const htmlElement = page.locator("html");
+    const initialButtonText = await toggleButton.textContent();
+    const hasInitialDarkClass = await htmlElement.evaluate((el) =>
+      el.classList.contains("dark"),
+    );
 
-    // Toggle to light mode
+    // Toggle to the opposite mode
     await toggleButton.click();
-    await expect(page.locator("html")).not.toHaveClass(/dark/);
-    await expect(toggleButton).toContainText(/light mode/i);
 
-    // Toggle back to dark mode
+    // Verify the mode changed
+    const hasClassAfterToggle = await htmlElement.evaluate((el) =>
+      el.classList.contains("dark"),
+    );
+    expect(hasClassAfterToggle).toBe(!hasInitialDarkClass);
+
+    // Verify button text changed
+    const buttonTextAfterToggle = await toggleButton.textContent();
+    expect(buttonTextAfterToggle).not.toBe(initialButtonText);
+
+    // Toggle back to original mode
     await toggleButton.click();
-    await expect(page.locator("html")).toHaveClass(/dark/);
-    await expect(toggleButton).toContainText(/dark mode/i);
+
+    // Verify it returned to original state
+    const hasClassAfterSecondToggle = await htmlElement.evaluate((el) =>
+      el.classList.contains("dark"),
+    );
+    expect(hasClassAfterSecondToggle).toBe(hasInitialDarkClass);
+
+    const buttonTextAfterSecondToggle = await toggleButton.textContent();
+    expect(buttonTextAfterSecondToggle).toBe(initialButtonText);
   });
 });

@@ -51,6 +51,7 @@
     "**/*": [
       "npm run format",
       "npm run lint"
-    ]
+    ],
+    "src/api-types.ts": []
   }
 }
