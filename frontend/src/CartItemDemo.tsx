@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import SellerGroup from "./components/SellerGroup";
+import CartSummary from "./components/CartSummary";
 import type { CartItemResponse } from "./api-types";
 import { useDarkMode } from "./hooks/useDarkMode";
 
@@ -117,11 +118,11 @@ export default function CartItemDemo() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
-              SellerGroup Component Demo
+              Cart with Summary Panel Demo
             </h1>
             <button
               onClick={toggle}
@@ -132,8 +133,8 @@ export default function CartItemDemo() {
             </button>
           </div>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
-            Testing seller grouping with checkbox selection, quantity controls,
-            and responsive layout
+            Testing cart summary panel with price calculation and responsive
+            layout
           </p>
           <div className="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
             <p className="text-sm text-indigo-900 dark:text-indigo-300">
@@ -145,33 +146,41 @@ export default function CartItemDemo() {
           </div>
         </header>
 
-        <main className="space-y-6">
-          {items.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-              <p className="text-lg">All items removed!</p>
-              <button
-                onClick={() => setItems(mockItems)}
-                className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
-              >
-                Reset Items
-              </button>
-            </div>
-          ) : (
-            Array.from(itemsBySeller.entries()).map(
-              ([sellerId, sellerItems]) => (
-                <SellerGroup
-                  key={sellerId}
-                  sellerId={sellerId}
-                  sellerName={sellerNames[sellerId] || `Seller ${sellerId}`}
-                  items={sellerItems}
-                  selectedItemIds={selectedItems}
-                  onSelectionChange={handleSelectionChange}
-                  onQuantityChange={handleQuantityChange}
-                  onRemove={handleRemove}
-                />
-              ),
-            )
-          )}
+        <main className="lg:grid lg:grid-cols-3 lg:gap-8">
+          {/* Cart Items - Left side (2/3 width) */}
+          <div className="lg:col-span-2 space-y-6 mb-24 lg:mb-0">
+            {items.length === 0 ? (
+              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+                <p className="text-lg">All items removed!</p>
+                <button
+                  onClick={() => setItems(mockItems)}
+                  className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+                >
+                  Reset Items
+                </button>
+              </div>
+            ) : (
+              Array.from(itemsBySeller.entries()).map(
+                ([sellerId, sellerItems]) => (
+                  <SellerGroup
+                    key={sellerId}
+                    sellerId={sellerId}
+                    sellerName={sellerNames[sellerId] || `Seller ${sellerId}`}
+                    items={sellerItems}
+                    selectedItemIds={selectedItems}
+                    onSelectionChange={handleSelectionChange}
+                    onQuantityChange={handleQuantityChange}
+                    onRemove={handleRemove}
+                  />
+                ),
+              )
+            )}
+          </div>
+
+          {/* Cart Summary - Right side (1/3 width) */}
+          <div className="lg:col-span-1">
+            <CartSummary items={items} selectedItemIds={selectedItems} />
+          </div>
         </main>
 
         <footer className="mt-8 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
@@ -190,6 +199,24 @@ export default function CartItemDemo() {
             <li>Price per unit (smaller font when quantity &gt; 1)</li>
             <li>Total price display (shown when quantity &gt; 1)</li>
             <li>Remove button with confirmation dialog</li>
+            <li>
+              <strong>
+                Cart summary panel with total price of selected items
+              </strong>
+            </li>
+            <li>
+              <strong>Price formatted in PLN (e.g., 123,45 zł)</strong>
+            </li>
+            <li>
+              <strong>
+                Dynamic price updates on selection/quantity changes
+              </strong>
+            </li>
+            <li>
+              <strong>
+                Sticky positioning on desktop, fixed at bottom on mobile
+              </strong>
+            </li>
             <li>Touch-friendly buttons (44px minimum touch target)</li>
             <li>Responsive layout (mobile/tablet/desktop)</li>
             <li>Dark mode support</li>
