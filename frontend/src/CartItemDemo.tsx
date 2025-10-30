@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import SellerGroup from "./components/SellerGroup";
 import CartSummary from "./components/CartSummary";
 import CartHeader from "./components/CartHeader";
+import EmptyCart from "./components/EmptyCart";
 import type { CartItemResponse } from "./api-types";
 import { useDarkMode } from "./hooks/useDarkMode";
 
@@ -174,15 +175,7 @@ export default function CartItemDemo() {
           {/* Cart Items - Left side (2/3 width) */}
           <div className="lg:col-span-2 space-y-6 mb-24 lg:mb-0">
             {items.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-                <p className="text-lg">All items removed!</p>
-                <button
-                  onClick={() => setItems(mockItems)}
-                  className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
-                >
-                  Reset Items
-                </button>
-              </div>
+              <EmptyCart onStartShopping={() => setItems(mockItems)} />
             ) : (
               <>
                 {/* Cart Header */}
