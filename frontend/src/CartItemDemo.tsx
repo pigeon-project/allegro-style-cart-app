@@ -1,5 +1,5 @@
-import { useState } from "react";
-import CartItem from "./components/CartItem";
+import { useState, useMemo } from "react";
+import SellerGroup from "./components/SellerGroup";
 import type { CartItemResponse } from "./api-types";
 import { useDarkMode } from "./hooks/useDarkMode";
 
@@ -33,12 +33,52 @@ const mockItems: CartItemResponse[] = [
     quantity: 3,
     totalPrice: 136.5,
   },
+  {
+    id: "item-4",
+    cartId: "cart-123",
+    sellerId: "seller-2",
+    productImage: "https://picsum.photos/200/200?random=4",
+    productTitle: "Wireless Headphones - Noise Cancelling",
+    pricePerUnit: 129.99,
+    quantity: 1,
+    totalPrice: 129.99,
+  },
+  {
+    id: "item-5",
+    cartId: "cart-123",
+    sellerId: "seller-3",
+    productImage: "https://picsum.photos/200/200?random=5",
+    productTitle: "Laptop Stand - Adjustable Aluminum",
+    pricePerUnit: 49.99,
+    quantity: 1,
+    totalPrice: 49.99,
+  },
 ];
+
+// Mock seller names
+const sellerNames: Record<string, string> = {
+  "seller-1": "TechStore Electronics",
+  "seller-2": "GadgetHub Pro",
+  "seller-3": "OfficeMax Supplies",
+};
 
 export default function CartItemDemo() {
   const { isDark, toggle } = useDarkMode();
   const [items, setItems] = useState(mockItems);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+
+  // Group items by seller
+  const itemsBySeller = useMemo(() => {
+    const grouped = new Map<string, CartItemResponse[]>();
+    items.forEach((item) => {
+      const sellerId = item.sellerId || "unknown";
+      if (!grouped.has(sellerId)) {
+        grouped.set(sellerId, []);
+      }
+      grouped.get(sellerId)!.push(item);
+    });
+    return grouped;
+  }, [items]);
 
   const handleSelectionChange = (itemId: string, selected: boolean) => {
     setSelectedItems((prev) => {
@@ -81,7 +121,7 @@ export default function CartItemDemo() {
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
-              CartItem Component Demo
+              SellerGroup Component Demo
             </h1>
             <button
               onClick={toggle}
@@ -92,8 +132,8 @@ export default function CartItemDemo() {
             </button>
           </div>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
-            Testing all features: selection, quantity controls, price display,
-            removal, and responsive layout
+            Testing seller grouping with checkbox selection, quantity controls,
+            and responsive layout
           </p>
           <div className="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
             <p className="text-sm text-indigo-900 dark:text-indigo-300">
@@ -105,7 +145,7 @@ export default function CartItemDemo() {
           </div>
         </header>
 
-        <main className="space-y-4">
+        <main className="space-y-6">
           {items.length === 0 ? (
             <div className="text-center py-12 text-slate-500 dark:text-slate-400">
               <p className="text-lg">All items removed!</p>
@@ -117,25 +157,35 @@ export default function CartItemDemo() {
               </button>
             </div>
           ) : (
-            items.map((item) => (
-              <CartItem
-                key={item.id}
-                item={item}
-                isSelected={selectedItems.has(item.id ?? "")}
-                onSelectionChange={handleSelectionChange}
-                onQuantityChange={handleQuantityChange}
-                onRemove={handleRemove}
-              />
-            ))
+            Array.from(itemsBySeller.entries()).map(
+              ([sellerId, sellerItems]) => (
+                <SellerGroup
+                  key={sellerId}
+                  sellerId={sellerId}
+                  sellerName={sellerNames[sellerId] || `Seller ${sellerId}`}
+                  items={sellerItems}
+                  selectedItemIds={selectedItems}
+                  onSelectionChange={handleSelectionChange}
+                  onQuantityChange={handleQuantityChange}
+                  onRemove={handleRemove}
+                />
+              ),
+            )
           )}
         </main>
 
         <footer className="mt-8 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
           <h2 className="font-semibold text-lg mb-2">Features Demonstrated:</h2>
           <ul className="list-disc list-inside space-y-1 text-sm text-slate-600 dark:text-slate-400">
+            <li>Cart items grouped by seller</li>
+            <li>
+              Seller-level checkbox to select/deselect all items from seller
+            </li>
+            <li>Indeterminate state when some items selected from a seller</li>
+            <li>Seller name and item count display</li>
             <li>Product image display (with fallback placeholder)</li>
             <li>Product title with truncation</li>
-            <li>Selection checkbox</li>
+            <li>Individual item selection checkbox</li>
             <li>Quantity selector (1-99 range, disabled at limits)</li>
             <li>Price per unit (smaller font when quantity &gt; 1)</li>
             <li>Total price display (shown when quantity &gt; 1)</li>

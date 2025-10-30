@@ -162,6 +162,52 @@ This product relies on the shared organization-wide Non-Functional Requirements:
   - Database access controlled via Spring Data JPA
   - Service accounts use minimal required permissions
 
+## Frontend Components
+
+### SellerGroup Component
+A React component that groups cart items by seller with comprehensive selection management.
+
+**Purpose**: Groups multiple cart items from the same seller into a single visual unit with a seller-level checkbox for batch selection.
+
+**Key Features**:
+- **Seller-level checkbox**: Select/deselect all items from a seller with a single click
+- **Indeterminate state**: Visual indication when only some items are selected from a seller
+- **Seller information display**: Shows seller name and item count (with proper singular/plural handling)
+- **Selection tracking**: Displays count of selected items when any are selected
+- **Performance optimized**: Uses `useMemo` to avoid unnecessary recalculations of selection state
+- **Responsive design**: Adapts layout for mobile, tablet, and desktop viewports
+- **Dark mode support**: Full theming integration with dark mode styles
+- **Accessibility**: Proper ARIA labels and touch-friendly controls (44px minimum touch target)
+
+**Props**:
+- `sellerId` (string): Unique identifier for the seller
+- `sellerName` (string): Display name for the seller
+- `items` (CartItemResponse[]): Array of cart items from this seller
+- `selectedItemIds` (Set<string>): Set of currently selected item IDs
+- `onSelectionChange` (function): Callback for individual item selection changes
+- `onSellerSelectionChange` (function): Callback for seller-level selection changes
+- `onQuantityChange` (function): Callback for quantity changes
+- `onRemove` (function): Callback for item removal
+
+**Implementation Details**:
+- Located at: `frontend/src/components/SellerGroup.tsx`
+- Test coverage: 27 comprehensive test cases
+- Integrates seamlessly with existing `CartItem` component
+- Uses React hooks: `useMemo`, `useEffect`, `useRef`
+
+**Usage Example**:
+```tsx
+<SellerGroup
+  sellerId="seller-123"
+  sellerName="TechStore Electronics"
+  items={sellerItems}
+  selectedItemIds={selectedItemIds}
+  onSelectionChange={handleSelectionChange}
+  onQuantityChange={handleQuantityChange}
+  onRemove={handleRemove}
+/>
+```
+
 ## Domain Model Implementation
 
 ### Cart Domain
