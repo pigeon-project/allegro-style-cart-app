@@ -1,5 +1,7 @@
 package com.github.pigeon.cart.web;
 
+import com.github.pigeon.common.Allowlist;
+import com.github.pigeon.common.TextUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -17,11 +19,13 @@ public record AddCartItemRequest(
         UUID sellerId,
 
         @Schema(description = "Product image URL", example = "https://example.com/product.jpg")
+        @Allowlist(pattern = TextUtils.PRODUCT_TEXT_PATTERN, message = "Product image URL contains invalid characters")
         String productImage,
 
         @Schema(description = "Product title", example = "Wireless Mouse", required = true)
         @NotBlank(message = "Product title is required")
         @Length(max = 500, message = "Product title must not exceed 500 characters")
+        @Allowlist(pattern = TextUtils.PRODUCT_TEXT_PATTERN, message = "Product title contains invalid characters")
         String productTitle,
 
         @Schema(description = "Price per unit", example = "29.99", required = true)

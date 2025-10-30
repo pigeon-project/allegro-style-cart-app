@@ -6,6 +6,7 @@ import com.github.pigeon.cart.api.Cart;
 import com.github.pigeon.cart.api.CartItem;
 import com.github.pigeon.common.PreconditionFailedException;
 import com.github.pigeon.common.ResourceNotFoundException;
+import com.github.pigeon.common.TextUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -113,11 +114,16 @@ class CartController {
                     return cartQueries.getCartByUserId(userId).orElseThrow();
                 });
 
+        // Normalize text inputs before processing (SHARED-NFR Section 10)
+        String normalizedTitle = TextUtils.normalizeText(request.productTitle());
+        String normalizedImage = request.productImage() != null ? 
+                TextUtils.normalizeText(request.productImage()) : null;
+
         UUID itemId = cartCommands.addCartItem(
                 cart.id(),
                 request.sellerId(),
-                request.productImage(),
-                request.productTitle(),
+                normalizedImage,
+                normalizedTitle,
                 request.pricePerUnit(),
                 request.quantity()
         );
