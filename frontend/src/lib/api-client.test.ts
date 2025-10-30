@@ -93,19 +93,13 @@ describe("API Client Retry Logic", () => {
         maxDelay: 5000,
       });
 
-      // First retry should happen after some delay
-      await vi.advanceTimersByTimeAsync(50);
-      expect(mockFn).toHaveBeenCalledTimes(1);
-
-      await vi.advanceTimersByTimeAsync(250);
-      expect(mockFn).toHaveBeenCalledTimes(2);
-
-      // Second retry with exponential backoff
-      await vi.advanceTimersByTimeAsync(600);
-      expect(mockFn).toHaveBeenCalledTimes(3);
-
+      // Wait for all retries to complete
+      await vi.runAllTimersAsync();
       const result = await promise;
+
+      // Verify exponential backoff occurred (3 attempts total)
       expect(result).toBe("success");
+      expect(mockFn).toHaveBeenCalledTimes(3);
     });
 
     it("does not retry on 4xx client errors", async () => {

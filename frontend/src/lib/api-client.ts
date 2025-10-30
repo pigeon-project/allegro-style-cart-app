@@ -71,34 +71,43 @@ function getRetryAfterDelay(retryAfter: string | null): number | null {
  * - Only retries idempotent operations (GET, PUT, DELETE)
  */
 export function createApiClient(baseUrl = "") {
-  return wretch(baseUrl).resolve((resolver: unknown) => {
-    const r = resolver as Record<
-      string,
-      (handler: (error: unknown) => void) => unknown
-    >;
-    return r
-      .unauthorized((error: unknown) => {
-        // Redirect to login or handle unauthorized
-        console.error("Unauthorized:", error);
-        throw error;
-      })
-      .forbidden((error: unknown) => {
-        console.error("Forbidden:", error);
-        throw error;
-      })
-      .notFound((error: unknown) => {
-        console.error("Not found:", error);
-        throw error;
-      })
-      .timeout((error: unknown) => {
-        console.error("Request timeout:", error);
-        throw error;
-      })
-      .fetchError((error: unknown) => {
-        console.error("Network error:", error);
-        throw error;
-      });
+  const client = wretch(baseUrl);
+
+  // Configure error handlers via resolve
+  client.resolve((resolver: unknown) => {
+    // Type assertion for wretch resolver which has incomplete types
+    const r = resolver as {
+      unauthorized: (handler: (error: unknown) => void) => unknown;
+      forbidden: (handler: (error: unknown) => void) => unknown;
+      notFound: (handler: (error: unknown) => void) => unknown;
+      timeout: (handler: (error: unknown) => void) => unknown;
+      fetchError: (handler: (error: unknown) => void) => unknown;
+    };
+    r.unauthorized((error: unknown) => {
+      // Redirect to login or handle unauthorized
+      console.error("Unauthorized:", error);
+      throw error;
+    });
+    r.forbidden((error: unknown) => {
+      console.error("Forbidden:", error);
+      throw error;
+    });
+    r.notFound((error: unknown) => {
+      console.error("Not found:", error);
+      throw error;
+    });
+    r.timeout((error: unknown) => {
+      console.error("Request timeout:", error);
+      throw error;
+    });
+    r.fetchError((error: unknown) => {
+      console.error("Network error:", error);
+      throw error;
+    });
+    return resolver;
   });
+
+  return client;
 }
 
 /**
