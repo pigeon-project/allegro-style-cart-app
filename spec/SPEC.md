@@ -368,6 +368,68 @@ A React component that displays the order summary with total price calculation f
 - Total price in large, bold indigo text
 - Professional Allegro-style design matching existing components
 
+### Cart Page
+A React route component that serves as the main shopping cart page, integrating all cart components with routing and state management.
+
+**Purpose**: Provides the complete cart experience with TanStack Router integration, React Query state management, and all cart components working together seamlessly.
+
+**Key Features**:
+- **TanStack Router integration**: File-based routing with root and index routes
+- **Global state management**: React Query with optimistic updates for all mutations
+- **Component integration**: Orchestrates CartHeader, SellerGroup, CartSummary, EmptyCart, and RecommendedProducts
+- **Loading states**: Spinner during initial load, overlay during mutations
+- **Error handling**: User-friendly error messages with retry functionality
+- **Seller grouping**: Items automatically grouped by sellerId with display names
+- **Selection management**: Local state for item selection with bulk operations
+- **Dark mode**: Global toggle accessible from fixed position (top-right)
+- **Responsive design**: Mobile (fixed bottom summary), tablet, desktop (sticky sidebar summary)
+- **Keyboard navigation**: Full keyboard accessibility for all interactive elements
+- **Loading overlay**: Displayed for mutations exceeding 250ms (optimistic updates happen immediately)
+
+**Routes**:
+- `/` - Main cart page (index route)
+- Root route provides dark mode toggle accessible from all pages
+
+**State Management**:
+- `useCart` - Fetches cart data with automatic caching (stale time: 1 minute)
+- `useRemoveCartItems` - Removes multiple items or all items with optimistic updates
+- `useUpdateCartItemQuantity` - Updates quantity with ETag concurrency control
+- `useRemoveCartItem` - Removes single item with optimistic updates
+- Local selection state managed via `useState<Set<string>>`
+
+**Implementation Details**:
+- Located at: `frontend/src/routes/index.tsx`
+- Root route at: `frontend/src/routes/__root.tsx`
+- Router config: `frontend/src/router.ts`
+- E2E test coverage: 6 comprehensive tests covering:
+  - Page rendering and dark mode toggle
+  - Empty cart state display
+  - Cart with items display
+  - Cart summary visibility
+  - Authentication flow
+  - Page load states
+- Uses React hooks: `useState`, `useMemo`
+- Integrates with `cart-api.ts` for all backend operations
+- ETags passed to mutations for optimistic concurrency control
+
+**Usage Example**:
+The cart page is automatically rendered when navigating to the root path (`/`). The router is configured in `main.tsx`:
+
+```tsx
+import { RouterProvider } from "@tanstack/react-router";
+import { router } from "./router";
+
+<RouterProvider router={router} />
+```
+
+**Visual Design**:
+- Desktop: Two-column layout (cart items + sticky sidebar summary)
+- Mobile: Single column with fixed bottom summary bar
+- Dark mode: Full theming with toggle in top-right corner
+- Loading: Centered spinner with message
+- Error: Centered error message with retry button
+- Professional Allegro-style design matching existing components
+
 ## Domain Model Implementation
 
 ### Cart Domain
