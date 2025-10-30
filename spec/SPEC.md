@@ -50,6 +50,13 @@ This product relies on the shared organization-wide Non-Functional Requirements:
 - **Routing**: TanStack Router for file-based routing
 - **State Management**: TanStack Query (React Query) 5.90.5 for server state with optimistic updates
 - **HTTP Client**: Wretch 3.0.2 for API calls
+- **API Client Layer**: 
+  - Type-safe API client with automatic retry logic for idempotent operations (GET, PUT, DELETE)
+  - Exponential backoff with jitter for 5xx server errors (base: 100ms, max: 5000ms, max retries: 3)
+  - Automatic handling of 429 rate limit responses with Retry-After header
+  - Network error recovery for transient failures
+  - ETag-based concurrency control for cart updates
+  - React Query hooks with optimistic updates for immediate UI feedback
 - **Dark Mode**: System preference detection with manual toggle, persisted to localStorage
 - **Development Server**: Vite dev server on port 5173 with proxy to backend (port 8080)
 - **Testing**:
