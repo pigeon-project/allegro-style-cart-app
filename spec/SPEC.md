@@ -66,8 +66,39 @@ This product relies on the shared organization-wide Non-Functional Requirements:
 
 ### Observability
 - **Health Endpoints**: `/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness`
+- **Metrics Endpoints**: `/actuator/metrics`, `/actuator/prometheus`
 - **Monitoring**: Spring Boot Actuator with health probes enabled
-- **Logging**: Structured JSON format with timestamp, level, service, environment, thread, logger, message, exception
+- **Logging**: 
+  - Structured JSON format with timestamp, level, service, environment, requestId, route, thread, logger, message, exception
+  - Request tracing via X-Request-ID header (auto-generated if not provided)
+  - Per-request logging with duration metrics (durationMs)
+  - Status-based log levels: INFO (2xx/3xx), WARN (4xx), ERROR (5xx)
+  - No raw PII in logs (only hashed/ID references)
+  - Actuator endpoints excluded from detailed request logging
+- **Metrics**:
+  - Core metrics: RPS, latency histograms (p50, p90, p95, p99), error rates by status class (4xx/5xx)
+  - Saturation metrics: JVM memory (used/max), system CPU usage, process CPU usage
+  - HTTP server request metrics with percentile histograms
+  - Distribution percentiles: 0.5, 0.9, 0.95, 0.99
+  - SLO buckets: 50ms, 100ms, 200ms, 250ms, 400ms, 500ms, 1s, 2s
+  - Common tags: application name, environment
+- **Security Event Logging**:
+  - Authentication successes and failures logged with username and error type
+  - Authorization denials logged with username and resource
+- **Alert Configuration** (see `observability-alerts.yaml`):
+  - Elevated 5xx error rate (threshold: 5% over 5 minutes)
+  - Read endpoint p95 latency breach (threshold: 250ms)
+  - Write endpoint p95 latency breach (threshold: 400ms)
+  - p99 latency breach (threshold: 1000ms over 5 minutes)
+  - Abnormal error rate (threshold: 10% over 5 minutes)
+  - Memory saturation (threshold: 90% of max heap)
+  - CPU saturation (threshold: 80% CPU usage)
+  - Authentication failure spike (threshold: 10 per minute)
+- **Service Level Objectives (SLOs)**:
+  - Availability: 99.9% uptime per month
+  - Read latency p95: ≤250ms
+  - Write latency p95: ≤400ms
+  - Error budget: 0.1%
 - **Documentation**: SpringDoc OpenAPI (Swagger UI available)
 
 ### Security

@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.data.jdbc)
     implementation(libs.spring.session.jdbc)
+    implementation(libs.micrometer.registry.prometheus)
 
     runtimeOnly(libs.h2)
     runtimeOnly(libs.mysql.connector)
