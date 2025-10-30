@@ -157,7 +157,15 @@ docker run -d -p 8080:8080 \
 - **Language & Runtime**: Java 25 with Virtual Threads enabled for improved concurrency
 - **Framework**: Spring Boot 3.5.6
 - **Package Layout**: Feature-based with limited visibility (only Commands/Queries facades are public)
-- **Architecture Enforcement**: ArchUnit tests validate architectural patterns
+- **Architecture Enforcement**: ArchUnit tests validate the following architectural patterns:
+  - Controllers must be package-private and reside in `web` packages
+  - Configuration classes must be package-private and end with `Configuration`
+  - Repository classes must be package-private
+  - No field injection allowed (constructor injection required)
+  - No deprecated Spring APIs used
+  - Only facade classes (ending with `Commands` or `Queries`) should be public
+- **Dependency Injection**: Constructor injection only (no field injection via `@Autowired`)
+- **Configuration**: Prefer `@Configuration` classes over `@Component` and `@Service`
 
 ### Database Configuration
 - **Development**: H2 in-memory database (jdbc:h2:mem:testdb)
