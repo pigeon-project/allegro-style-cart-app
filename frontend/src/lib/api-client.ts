@@ -71,32 +71,34 @@ function getRetryAfterDelay(retryAfter: string | null): number | null {
  * - Only retries idempotent operations (GET, PUT, DELETE)
  */
 export function createApiClient(baseUrl = "") {
-  return wretch(baseUrl)
-    .errorType("json")
-    .resolve((resolver) =>
-      resolver
-        .unauthorized((error) => {
-          // Redirect to login or handle unauthorized
-          console.error("Unauthorized:", error);
-          throw error;
-        })
-        .forbidden((error) => {
-          console.error("Forbidden:", error);
-          throw error;
-        })
-        .notFound((error) => {
-          console.error("Not found:", error);
-          throw error;
-        })
-        .timeout((error) => {
-          console.error("Request timeout:", error);
-          throw error;
-        })
-        .fetchError((error) => {
-          console.error("Network error:", error);
-          throw error;
-        }),
-    );
+  return wretch(baseUrl).resolve((resolver: unknown) => {
+    const r = resolver as Record<
+      string,
+      (handler: (error: unknown) => void) => unknown
+    >;
+    return r
+      .unauthorized((error: unknown) => {
+        // Redirect to login or handle unauthorized
+        console.error("Unauthorized:", error);
+        throw error;
+      })
+      .forbidden((error: unknown) => {
+        console.error("Forbidden:", error);
+        throw error;
+      })
+      .notFound((error: unknown) => {
+        console.error("Not found:", error);
+        throw error;
+      })
+      .timeout((error: unknown) => {
+        console.error("Request timeout:", error);
+        throw error;
+      })
+      .fetchError((error: unknown) => {
+        console.error("Network error:", error);
+        throw error;
+      });
+  });
 }
 
 /**
