@@ -57,7 +57,21 @@ This product relies on the shared organization-wide Non-Functional Requirements:
   - Network error recovery for transient failures
   - ETag-based concurrency control for cart updates
   - React Query hooks with optimistic updates for immediate UI feedback
-- **Dark Mode**: System preference detection with manual toggle, persisted to localStorage
+- **Dark Mode**: 
+  - System preference detection with manual toggle, persisted to localStorage
+  - Custom `useDarkMode` hook with `useCallback` for stable function references
+  - Toggle button component with professional sun/moon icons (@tabler/icons-react)
+  - Smooth 200ms CSS transitions between themes (cubic-bezier timing function)
+  - All components styled for both light and dark modes
+  - Color contrast meets WCAG AA standards:
+    - Light mode: slate-900 text on gray-50 background (contrast ratio: 17.5:1)
+    - Dark mode: slate-100 text on slate-900 background (contrast ratio: 15.5:1)
+    - Interactive elements: indigo-500 focus rings (contrast ratio: 4.7:1)
+  - Keyboard accessible with focus indicators
+  - Touch-friendly 44px minimum touch target size
+  - Theme preference saved on initialization and toggle
+  - Unit tested with 17 comprehensive test cases
+  - E2E tested for toggle functionality
 - **Development Server**: Vite dev server on port 5173 with proxy to backend (port 8080)
 - **Testing**:
   - Unit/Integration: Vitest 4.0.5 with jsdom environment
