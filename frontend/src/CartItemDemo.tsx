@@ -59,7 +59,7 @@ export default function CartItemDemo() {
           ? {
               ...item,
               quantity,
-              totalPrice: (item.pricePerUnit || 0) * quantity,
+              totalPrice: (item.pricePerUnit ?? 0) * quantity,
             }
           : item,
       ),
@@ -121,7 +121,7 @@ export default function CartItemDemo() {
               <CartItem
                 key={item.id}
                 item={item}
-                isSelected={selectedItems.has(item.id || "")}
+                isSelected={selectedItems.has(item.id ?? "")}
                 onSelectionChange={handleSelectionChange}
                 onQuantityChange={handleQuantityChange}
                 onRemove={handleRemove}
