@@ -198,7 +198,7 @@ describe("RecommendedProducts", () => {
 
       expect(mockMutate).toHaveBeenCalledWith(
         expect.objectContaining({
-          sellerId: "seller-2",
+          sellerId: "550e8400-e29b-41d4-a716-446655440002",
           productImage: expect.stringContaining("unsplash"),
           productTitle: "Smart Watch with Health Monitoring",
           pricePerUnit: 199.99,
