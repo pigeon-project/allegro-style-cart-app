@@ -73,7 +73,13 @@ describe("API Client Retry Logic", () => {
       const mockFn = vi.fn().mockRejectedValue(error);
 
       const promise = withRetry(mockFn, "GET", { maxRetries: 2 });
+
+      // Advance timers and wait for promise to settle
+      const settlePromise = promise.catch(() => {
+        // Expected to throw, catching to prevent unhandled rejection
+      });
       await vi.runAllTimersAsync();
+      await settlePromise;
 
       await expect(promise).rejects.toThrow();
       expect(mockFn).toHaveBeenCalledTimes(3); // initial + 2 retries
