@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import CartItem from "./CartItem";
 import type { CartItemResponse } from "../api-types";
 
@@ -25,13 +25,20 @@ export default function SellerGroup({
 }: SellerGroupProps) {
   const checkboxRef = useRef<HTMLInputElement>(null);
 
-  // Calculate selection state
-  const selectedCount = items.filter((item) =>
-    selectedItemIds.has(item.id || ""),
-  ).length;
-  const totalCount = items.length;
-  const isAllSelected = totalCount > 0 && selectedCount === totalCount;
-  const isIndeterminate = selectedCount > 0 && selectedCount < totalCount;
+  // Calculate selection state - memoized for performance
+  const { selectedCount, totalCount, isAllSelected, isIndeterminate } =
+    useMemo(() => {
+      const total = items.length;
+      const selected = items.filter((item) =>
+        selectedItemIds.has(item.id || ""),
+      ).length;
+      return {
+        selectedCount: selected,
+        totalCount: total,
+        isAllSelected: total > 0 && selected === total,
+        isIndeterminate: selected > 0 && selected < total,
+      };
+    }, [items, selectedItemIds]);
 
   // Update checkbox indeterminate state
   useEffect(() => {
@@ -46,12 +53,12 @@ export default function SellerGroup({
     const selected = e.target.checked;
     onSellerSelectionChange?.(sellerId, selected);
 
-    // Also trigger individual item selection changes
-    items.forEach((item) => {
-      if (item.id) {
-        onSelectionChange?.(item.id, selected);
-      }
-    });
+    // Trigger individual item selection changes for items with IDs
+    items
+      .filter((item) => item.id)
+      .forEach((item) => {
+        onSelectionChange?.(item.id!, selected);
+      });
   };
 
   return (
