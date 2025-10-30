@@ -36,7 +36,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       probes:
@@ -47,10 +47,30 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.9, 0.95, 0.99
+      slo:
+        http.server.requests: 50ms, 100ms, 200ms, 250ms, 400ms, 500ms, 1s, 2s
+    enable:
+      jvm: true
+      process: true
+      system: true
+      http: true
+  observations:
+    http:
+      server:
+        requests:
+          name: http.server.requests
 
 logging:
   pattern:
-    console: '{"timestamp":"%d{yyyy-MM-dd''T''HH:mm:ss.SSSXXX}","level":"%level","service":"${spring.application.name}","thread":"%thread","logger":"%logger{36}","message":"%msg","exception":"%ex{full}"}%n'
+    console: '{"timestamp":"%d{yyyy-MM-dd''T''HH:mm:ss.SSSXXX}","level":"%level","service":"${spring.application.name}","environment":"%X{environment:-default}","requestId":"%X{requestId:-}","route":"%X{route:-}","thread":"%thread","logger":"%logger{36}","message":"%msg","exception":"%ex{full}"}%n'
   level:
     root: INFO
     com.github.pigeon: DEBUG
