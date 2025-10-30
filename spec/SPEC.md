@@ -164,6 +164,64 @@ This product relies on the shared organization-wide Non-Functional Requirements:
 
 ## Frontend Components
 
+### CartHeader Component
+A React component that provides cart-wide selection and removal controls at the top of the shopping cart.
+
+**Purpose**: Enables users to select or deselect all items in the cart at once and provides bulk removal options through a dropdown menu.
+
+**Key Features**:
+- **"Select All" checkbox**: Select/deselect all cart items with a single click
+- **Indeterminate state**: Visual indication when some (but not all) items are selected
+- **Selection counter**: Displays count of selected items (e.g., "4 of 5 selected")
+- **Remove dropdown menu**: Provides two removal options
+  - "Remove selected items" - Only enabled when items are selected
+  - "Remove all items" - Always available
+- **Confirmation dialogs**: Shows confirmation prompts for both remove operations
+- **Keyboard navigation**: 
+  - Escape key closes the dropdown
+  - Proper focus management
+- **Click-outside handling**: Dropdown closes when clicking outside
+- **Responsive design**: Adapts layout for mobile, tablet, and desktop viewports
+- **Dark mode support**: Full theming integration with dark mode styles
+- **Accessibility**: 
+  - Proper ARIA labels and roles
+  - Dialog attributes for confirmation modals
+  - Touch-friendly controls (44px minimum touch target)
+
+**Props**:
+- `totalItems` (number): Total number of items in the cart
+- `selectedItems` (number): Number of currently selected items
+- `allSelected` (boolean): Whether all items are selected
+- `indeterminate` (boolean): Whether some (but not all) items are selected
+- `onSelectAll` (function): Callback when "Select All" is toggled
+- `onRemoveSelected` (function): Callback to remove selected items
+- `onRemoveAll` (function): Callback to remove all items
+
+**Implementation Details**:
+- Located at: `frontend/src/components/CartHeader.tsx`
+- Test coverage: 33 comprehensive test cases covering:
+  - Select all functionality and indeterminate state
+  - Dropdown menu interactions (open/close/click outside)
+  - Remove operations with confirmation dialogs
+  - Keyboard navigation (Escape key)
+  - Accessibility attributes
+  - Touch-friendly design
+  - Dark mode support
+- Uses React hooks: `useState`, `useRef`, `useEffect`
+
+**Usage Example**:
+```tsx
+<CartHeader
+  totalItems={items.length}
+  selectedItems={selectedItemIds.size}
+  allSelected={allSelected}
+  indeterminate={indeterminate}
+  onSelectAll={handleSelectAll}
+  onRemoveSelected={handleRemoveSelected}
+  onRemoveAll={handleRemoveAll}
+/>
+```
+
 ### SellerGroup Component
 A React component that groups cart items by seller with comprehensive selection management.
 

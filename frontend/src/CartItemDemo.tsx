@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import SellerGroup from "./components/SellerGroup";
 import CartSummary from "./components/CartSummary";
+import CartHeader from "./components/CartHeader";
 import type { CartItemResponse } from "./api-types";
 import { useDarkMode } from "./hooks/useDarkMode";
 
@@ -116,6 +117,29 @@ export default function CartItemDemo() {
     });
   };
 
+  // Calculate selection state for header
+  const allSelected = items.length > 0 && selectedItems.size === items.length;
+  const indeterminate = selectedItems.size > 0 && !allSelected;
+
+  const handleSelectAll = (selected: boolean) => {
+    if (selected) {
+      setSelectedItems(new Set(items.map((item) => item.id!)));
+    } else {
+      setSelectedItems(new Set());
+    }
+  };
+
+  const handleRemoveSelected = () => {
+    const selectedIds = Array.from(selectedItems);
+    setItems((prev) => prev.filter((item) => !selectedIds.includes(item.id!)));
+    setSelectedItems(new Set());
+  };
+
+  const handleRemoveAll = () => {
+    setItems([]);
+    setSelectedItems(new Set());
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -160,20 +184,34 @@ export default function CartItemDemo() {
                 </button>
               </div>
             ) : (
-              Array.from(itemsBySeller.entries()).map(
-                ([sellerId, sellerItems]) => (
-                  <SellerGroup
-                    key={sellerId}
-                    sellerId={sellerId}
-                    sellerName={sellerNames[sellerId] || `Seller ${sellerId}`}
-                    items={sellerItems}
-                    selectedItemIds={selectedItems}
-                    onSelectionChange={handleSelectionChange}
-                    onQuantityChange={handleQuantityChange}
-                    onRemove={handleRemove}
-                  />
-                ),
-              )
+              <>
+                {/* Cart Header */}
+                <CartHeader
+                  totalItems={items.length}
+                  selectedItems={selectedItems.size}
+                  allSelected={allSelected}
+                  indeterminate={indeterminate}
+                  onSelectAll={handleSelectAll}
+                  onRemoveSelected={handleRemoveSelected}
+                  onRemoveAll={handleRemoveAll}
+                />
+
+                {/* Seller Groups */}
+                {Array.from(itemsBySeller.entries()).map(
+                  ([sellerId, sellerItems]) => (
+                    <SellerGroup
+                      key={sellerId}
+                      sellerId={sellerId}
+                      sellerName={sellerNames[sellerId] || `Seller ${sellerId}`}
+                      items={sellerItems}
+                      selectedItemIds={selectedItems}
+                      onSelectionChange={handleSelectionChange}
+                      onQuantityChange={handleQuantityChange}
+                      onRemove={handleRemove}
+                    />
+                  ),
+                )}
+              </>
             )}
           </div>
 
@@ -186,6 +224,28 @@ export default function CartItemDemo() {
         <footer className="mt-8 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
           <h2 className="font-semibold text-lg mb-2">Features Demonstrated:</h2>
           <ul className="list-disc list-inside space-y-1 text-sm text-slate-600 dark:text-slate-400">
+            <li>
+              <strong>Cart header with "Select All" checkbox</strong>
+            </li>
+            <li>
+              <strong>
+                Cart header indeterminate state when some items selected
+              </strong>
+            </li>
+            <li>
+              <strong>
+                "Remove" dropdown menu with "Remove selected" and "Remove all"
+                options
+              </strong>
+            </li>
+            <li>
+              <strong>
+                Confirmation dialogs for remove selected and remove all actions
+              </strong>
+            </li>
+            <li>
+              <strong>Keyboard navigation (Escape to close dropdown)</strong>
+            </li>
             <li>Cart items grouped by seller</li>
             <li>
               Seller-level checkbox to select/deselect all items from seller
