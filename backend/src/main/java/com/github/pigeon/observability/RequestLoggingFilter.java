@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -26,8 +27,8 @@ class RequestLoggingFilter implements Filter {
 
     private final String environment;
 
-    RequestLoggingFilter() {
-        this.environment = System.getenv().getOrDefault("SPRING_PROFILES_ACTIVE", "default");
+    RequestLoggingFilter(@Value("${spring.profiles.active:default}") String environment) {
+        this.environment = environment;
     }
 
     @Override

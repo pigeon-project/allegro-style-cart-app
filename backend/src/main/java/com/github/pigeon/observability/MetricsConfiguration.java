@@ -3,6 +3,7 @@ package com.github.pigeon.observability;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,10 +12,11 @@ import org.springframework.context.annotation.Configuration;
 class MetricsConfiguration {
 
     @Bean
-    MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
+    MeterRegistryCustomizer<MeterRegistry> metricsCommonTags(
+            @Value("${spring.application.name}") String applicationName,
+            @Value("${spring.profiles.active:default}") String environment) {
         return registry -> {
-            String environment = System.getenv().getOrDefault("SPRING_PROFILES_ACTIVE", "default");
-            registry.config().commonTags("application", "allegro-cart-backend", "environment", environment);
+            registry.config().commonTags("application", applicationName, "environment", environment);
         };
     }
 

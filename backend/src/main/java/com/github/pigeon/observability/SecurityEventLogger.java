@@ -29,9 +29,15 @@ class SecurityEventLogger {
 
     @EventListener
     public void onAuthorizationDenied(AuthorizationDeniedEvent<?> event) {
-        String username = event.getAuthentication() != null 
-            ? event.getAuthentication().get().getName() 
-            : "anonymous";
+        String username = "anonymous";
+        if (event.getAuthentication() != null) {
+            try {
+                username = event.getAuthentication().get().getName();
+            } catch (Exception e) {
+                // Fall back to anonymous if unable to get username
+                logger.debug("Unable to extract username from authentication", e);
+            }
+        }
         logger.warn("Authorization denied: username={} resource={}", 
                 username, event.getAuthorizationDecision());
     }
