@@ -43,6 +43,26 @@ This product relies on the shared organization-wide Non-Functional Requirements:
 
 ## Technical Infrastructure
 
+### Frontend Architecture
+- **Build Tool**: Vite 7.1.12 with React plugin
+- **Framework**: React 19.2.0 with TypeScript 5.9.3
+- **Styling**: Tailwind CSS 4.1.13 with @tailwindcss/vite plugin
+- **Routing**: TanStack Router for file-based routing
+- **State Management**: TanStack Query (React Query) 5.90.5 for server state with optimistic updates
+- **HTTP Client**: Wretch 3.0.2 for API calls
+- **Dark Mode**: System preference detection with manual toggle, persisted to localStorage
+- **Development Server**: Vite dev server on port 5173 with proxy to backend (port 8080)
+- **Testing**:
+  - Unit/Integration: Vitest 4.0.5 with jsdom environment
+  - React Testing: @testing-library/react 16.3.0 with user-event 14.6.1
+  - E2E: Playwright 1.56.1 with Chromium, Firefox, and WebKit support
+- **Code Quality**:
+  - Linting: ESLint 9.38.0 with TypeScript, React, and React Query plugins
+  - Formatting: Prettier 3.6.2
+  - Pre-commit: Husky 9.1.7 with lint-staged
+- **Type Generation**: Automated OpenAPI-to-TypeScript conversion via swagger-typescript-api
+- **Build Output**: `frontend/build/dist/static/` (served by backend in production)
+
 ### Backend Architecture
 - **Language & Runtime**: Java 25 with Virtual Threads enabled for improved concurrency
 - **Framework**: Spring Boot 3.5.6

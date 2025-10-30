@@ -28,7 +28,9 @@ async function main() {
         ready = true;
         break;
       }
-    } catch {}
+    } catch {
+      // Ignore fetch errors during startup
+    }
     await wait(2000);
   }
 
