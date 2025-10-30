@@ -95,6 +95,26 @@ docker stop allegro-cart
 docker rm allegro-cart
 ```
 
+**Using Docker Compose:**
+
+For easier management, use the included `docker-compose.yml`:
+
+```bash
+# Start the application
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Check status
+docker compose ps
+
+# Stop and remove containers
+docker compose down
+```
+
+The Docker Compose configuration includes examples for both H2 in-memory database (default) and MySQL setup. To use MySQL, uncomment the database sections in `docker-compose.yml`.
+
 ## Features
 
 ### Rate Limiting
