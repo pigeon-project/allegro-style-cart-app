@@ -41,6 +41,75 @@ Users adding and reviewing items prior to checkout.
 ## Non-Functional Requirements (Reference)
 This product relies on the shared organization-wide Non-Functional Requirements: [Shared NFR](SHARED-NFR.md)
 
+## Deployment
+
+### Container Image
+The application is packaged as a production-ready Docker container with the following characteristics:
+
+**Build Process:**
+- Multi-stage Dockerfile with separate build stages for optimal layer caching
+- Backend built with Gradle and Java 25 (Eclipse Temurin JDK)
+- Frontend built with npm/Vite (automatically invoked via Gradle)
+- Final runtime image uses Eclipse Temurin JRE (Debian-based)
+- Non-root user (`spring:spring`) for enhanced security
+- Image size: ~389MB (optimized with minimal dependencies)
+
+**Runtime Configuration:**
+- Base image: `eclipse-temurin:25-jre` (Debian)
+- Non-root execution with dedicated `spring` user
+- JVM optimized for containers:
+  - `-XX:MaxRAMPercentage=75.0` - Uses 75% of available container memory
+  - `-XX:+UseZGC -XX:+ZGenerational` - Z Garbage Collector for low latency
+- Port: 8080 (HTTP)
+- Profiles:
+  - `default` - Development mode with H2 in-memory database and form login
+  - `production` - Production mode with external database and OAuth2 JWT
+
+**Health Checks:**
+- Liveness probe: `GET /actuator/health/liveness` (container is alive)
+- Readiness probe: `GET /actuator/health/readiness` (ready to serve traffic)
+- Health check interval: 30s, timeout: 3s, start period: 60s, retries: 3
+- Compliant with SHARED-NFR Section 2 (Availability requirements)
+
+**Environment Variables:**
+- `SPRING_PROFILES_ACTIVE` - Set to `production` for production deployment
+- `JDBC_DATABASE_URL` - JDBC connection URL (e.g., `jdbc:mysql://host:port/db`)
+- `JDBC_DATABASE_USERNAME` - Database username
+- `JDBC_DATABASE_PASSWORD` - Database password
+- `JAVA_TOOL_OPTIONS` - JVM options (default configured for container optimization)
+
+**Build Command:**
+```bash
+docker build -t allegro-cart:latest .
+```
+
+**Run Command (Development):**
+```bash
+docker run -d -p 8080:8080 -e SPRING_PROFILES_ACTIVE=default allegro-cart:latest
+```
+
+**Run Command (Production):**
+```bash
+docker run -d -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=production \
+  -e JDBC_DATABASE_URL=jdbc:mysql://db-host:3306/cartdb \
+  -e JDBC_DATABASE_USERNAME=cartuser \
+  -e JDBC_DATABASE_PASSWORD=securepassword \
+  allegro-cart:latest
+```
+
+**Security Features:**
+- Non-root container user
+- Minimal attack surface (JRE only, no build tools)
+- No secrets in image (configured via environment variables)
+- Regular base image updates via Eclipse Temurin project
+
+**Kubernetes Considerations:**
+- Use liveness and readiness probes for health monitoring
+- Configure resource requests/limits based on workload
+- Use external ConfigMaps/Secrets for database credentials
+- Recommended replicas: 2+ for high availability (99.9% SLO)
+
 ## Technical Infrastructure
 
 ### Frontend Architecture
