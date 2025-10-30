@@ -125,4 +125,141 @@ Public API exposed via:
 - **CartCommands**: Create cart, add/update/remove items, create sellers
 - **CartQueries**: Retrieve cart, items, sellers (by various criteria)
 
+#### REST API Endpoints
+
+The cart functionality is exposed via REST API endpoints following OpenAPI 3.0 specification.
+
+##### GET /api/cart
+Retrieves the current user's shopping cart with all items. Auto-creates cart if it doesn't exist.
+
+**Response (200 OK):**
+- Returns `CartResponse` with cart ID, user ID, and list of items
+- Includes `ETag` header for concurrency control
+
+**Error Responses:**
+- 401 Unauthorized - User not authenticated
+- 404 Not Found - Cart not found (auto-creates in current implementation)
+
+##### POST /api/cart/items
+Adds a new item to the shopping cart. Creates cart if it doesn't exist.
+
+**Request Body:**
+```json
+{
+  "sellerId": "uuid",
+  "productImage": "string (optional)",
+  "productTitle": "string (required, max 500 chars)",
+  "pricePerUnit": "decimal (required, positive)",
+  "quantity": "integer (required, 1-99)"
+}
+```
+
+**Response (201 Created):**
+- Returns `Location` header with URI of created item
+- Empty body
+
+**Error Responses:**
+- 400 Bad Request - Validation errors (missing fields, invalid format)
+- 401 Unauthorized - User not authenticated
+- 422 Unprocessable Entity - Domain validation errors (e.g., quantity out of range)
+
+##### PUT /api/cart/items/{id}
+Updates the quantity of a specific cart item.
+
+**Request Headers:**
+- `If-Match: "etag"` (optional) - ETag for optimistic concurrency control
+
+**Request Body:**
+```json
+{
+  "quantity": "integer (required, 1-99)"
+}
+```
+
+**Response (204 No Content):**
+- Empty body
+
+**Error Responses:**
+- 400 Bad Request - Validation errors
+- 401 Unauthorized - User not authenticated
+- 404 Not Found - Item not found or doesn't belong to user's cart
+- 412 Precondition Failed - ETag mismatch (cart was modified)
+- 422 Unprocessable Entity - Domain validation errors
+
+##### DELETE /api/cart/items/{id}
+Removes a specific item from the cart.
+
+**Response (204 No Content):**
+- Empty body
+
+**Error Responses:**
+- 401 Unauthorized - User not authenticated
+- 404 Not Found - Item not found or doesn't belong to user's cart
+
+##### DELETE /api/cart/items
+Removes multiple items or all items from the cart.
+
+**Query Parameters:**
+- `all=true` (optional) - Remove all items
+
+**Request Body (optional):**
+```json
+{
+  "itemIds": ["uuid1", "uuid2", ...]
+}
+```
+
+**Behavior:**
+- If `all=true` or no request body: removes all cart items
+- If request body provided: removes specified items
+
+**Response (204 No Content):**
+- Empty body
+
+**Error Responses:**
+- 400 Bad Request - Validation errors (empty itemIds list)
+- 401 Unauthorized - User not authenticated
+- 404 Not Found - Cart not found or specified item doesn't belong to user's cart
+
+#### Error Handling
+
+All error responses follow RFC7807 Problem Details format:
+
+```json
+{
+  "type": "https://api.allegro-cart.com/problems/validation-error",
+  "title": "Validation Error",
+  "status": 400,
+  "detail": "Validation failed for one or more fields",
+  "instance": "/api/cart/items",
+  "errors": {
+    "quantity": "Quantity must be at least 1"
+  }
+}
+```
+
+Error types:
+- `validation-error` (400) - Request validation failures
+- `not-found` (404) - Resource not found
+- `conflict` (409) - Resource conflict
+- `precondition-failed` (412) - ETag mismatch
+- `domain-validation-error` (422) - Business logic validation failures
+
+#### Concurrency Control
+
+Cart operations use ETags for optimistic concurrency control:
+1. GET /api/cart returns an ETag header
+2. Client includes `If-Match: "etag"` header in PUT requests
+3. Server validates ETag before modification
+4. Returns 412 Precondition Failed if ETag doesn't match (cart was modified by another request)
+
+ETag is calculated based on cart ID and all item IDs with their quantities, ensuring detection of any cart modifications.
+
+#### Security
+
+All endpoints require authentication:
+- Development: Form-based login (username: admin, password: password)
+- Production: OAuth2 JWT tokens
+- Authorization enforced server-side - users can only access their own cart
+
 ---

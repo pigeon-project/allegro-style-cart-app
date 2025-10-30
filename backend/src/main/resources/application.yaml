@@ -26,7 +26,7 @@ spring:
   session:
     store-type: jdbc
     jdbc:
-      initialize-schema: embedded
+      initialize-schema: never
       schema: classpath:org/springframework/session/jdbc/schema-h2.sql
   sql:
     init:
