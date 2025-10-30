@@ -208,6 +208,58 @@ A React component that groups cart items by seller with comprehensive selection 
 />
 ```
 
+### CartSummary Component
+A React component that displays the order summary with total price calculation for selected cart items.
+
+**Purpose**: Provides a comprehensive summary panel showing the total price of selected items with PLN currency formatting, enabling users to proceed to checkout.
+
+**Key Features**:
+- **Price calculation**: Dynamically calculates total price of selected items only
+- **PLN currency formatting**: Displays prices in Polish format (e.g., 123,45 zł) with comma as decimal separator
+- **Dynamic updates**: Updates immediately when items are selected/deselected or quantities change
+- **Responsive layout**: 
+  - Desktop: Sticky sidebar positioned on the right (top: 4 spacing units)
+  - Mobile/Tablet: Fixed bar at the bottom of the viewport with compact layout
+- **Selection counter**: Shows count of selected items with proper singular/plural handling
+- **Checkout button**: 
+  - Enabled when items are selected with "Proceed to Checkout" text
+  - Disabled when no items selected with "Select items" text
+  - Proper ARIA labels for accessibility
+- **Dark mode support**: Full theming integration with dark mode styles
+- **Touch-friendly**: Minimum 44px touch targets for mobile interactions
+
+**Props**:
+- `items` (CartItemResponse[]): Array of all cart items
+- `selectedItemIds` (Set<string>): Set of currently selected item IDs
+
+**Implementation Details**:
+- Located at: `frontend/src/components/CartSummary.tsx`
+- Test coverage: 32 comprehensive test cases covering:
+  - Price calculation logic (selected items, quantity changes, edge cases)
+  - PLN currency formatting with various amounts
+  - Dynamic updates on selection and quantity changes
+  - Selected items counter display
+  - Checkout button states (enabled/disabled)
+  - Responsive layout rendering
+- Uses React hooks: `useMemo` for performance-optimized price calculations
+- Price calculation: Uses `totalPrice` field if available, otherwise calculates from `pricePerUnit * quantity`
+- Handles edge cases: missing prices, quantities, fractional cents, very large amounts
+
+**Usage Example**:
+```tsx
+<CartSummary 
+  items={cartItems} 
+  selectedItemIds={selectedItemIds} 
+/>
+```
+
+**Visual Design**:
+- Desktop: White/dark background, rounded corners, shadow, sticky positioning
+- Mobile: Full-width fixed bottom bar with compact horizontal layout
+- Selected items count displayed prominently
+- Total price in large, bold indigo text
+- Professional Allegro-style design matching existing components
+
 ## Domain Model Implementation
 
 ### Cart Domain
