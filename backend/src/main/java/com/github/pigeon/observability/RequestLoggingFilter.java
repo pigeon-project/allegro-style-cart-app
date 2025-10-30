@@ -24,6 +24,9 @@ class RequestLoggingFilter implements Filter {
     private static final String REQUEST_ID_MDC_KEY = "requestId";
     private static final String ROUTE_MDC_KEY = "route";
     private static final String ENVIRONMENT_MDC_KEY = "environment";
+    private static final String STATUS_MDC_KEY = "status";
+    private static final String DURATION_MS_MDC_KEY = "durationMs";
+    private static final String ERROR_CODE_MDC_KEY = "errorCode";
 
     private final String environment;
 
@@ -70,6 +73,15 @@ class RequestLoggingFilter implements Filter {
         } finally {
             long durationMs = System.currentTimeMillis() - startTime;
             int status = responseWrapper.getStatus();
+            
+            // Set additional MDC fields for structured logging
+            MDC.put(STATUS_MDC_KEY, String.valueOf(status));
+            MDC.put(DURATION_MS_MDC_KEY, String.valueOf(durationMs));
+            
+            // Set errorCode for 4xx and 5xx responses
+            if (status >= 400) {
+                MDC.put(ERROR_CODE_MDC_KEY, String.valueOf(status));
+            }
             
             logRequest(httpRequest, status, durationMs);
             

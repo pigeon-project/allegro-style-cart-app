@@ -24,12 +24,26 @@ All logs are emitted in structured JSON format with the following fields:
   "environment": "default",
   "requestId": "test-request-123",
   "route": "GET /api/cart",
+  "durationMs": "40",
+  "status": "200",
+  "errorCode": "",
   "thread": "tomcat-handler-4",
   "logger": "c.g.p.o.RequestLoggingFilter",
   "message": "Request completed: method=GET uri=/api/cart status=200 durationMs=40",
   "exception": ""
 }
 ```
+
+**Required Fields (per SHARED-NFR Section 7):**
+- `timestamp`: ISO-8601 format timestamp
+- `level`: Log level (INFO, WARN, ERROR)
+- `service`: Application name
+- `environment`: Deployment environment (default, production)
+- `requestId`: Unique request identifier for tracing
+- `route`: HTTP method and URI path
+- `durationMs`: Request duration in milliseconds
+- `status`: HTTP status code
+- `errorCode`: Error code (set to status code for 4xx/5xx, empty for 2xx/3xx)
 
 ### Request Tracing
 

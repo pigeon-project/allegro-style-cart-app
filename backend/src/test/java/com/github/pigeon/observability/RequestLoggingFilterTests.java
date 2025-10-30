@@ -50,7 +50,7 @@ class RequestLoggingFilterTests {
 
     @Test
     @WithMockUser(value = "testuser")
-    @DisplayName("Should log request with structured JSON format including requestId, route, and durationMs")
+    @DisplayName("Should log request with structured JSON format including requestId, route, durationMs, status, and errorCode")
     void shouldLogRequestWithStructuredFormat(CapturedOutput output) throws Exception {
         Cart cart = new Cart(cartId, "testuser");
         when(cartQueries.getCartByUserId("testuser")).thenReturn(Optional.of(cart));
@@ -62,16 +62,17 @@ class RequestLoggingFilterTests {
 
         String logOutput = output.getOut();
         
-        // Verify structured JSON log format
+        // Verify structured JSON log format with all required fields
         assertThat(logOutput).contains("\"timestamp\":");
         assertThat(logOutput).contains("\"level\":");
         assertThat(logOutput).contains("\"service\":\"allegro-cart-backend\"");
         assertThat(logOutput).contains("\"environment\":");
         assertThat(logOutput).contains("\"requestId\":");
         assertThat(logOutput).contains("\"route\":\"GET /api/cart\"");
-        assertThat(logOutput).contains("\"message\":\"Request completed:");
-        assertThat(logOutput).contains("durationMs=");
-        assertThat(logOutput).contains("status=200");
+        assertThat(logOutput).contains("\"durationMs\":");
+        assertThat(logOutput).contains("\"status\":\"200\"");
+        // errorCode should be empty for successful requests
+        assertThat(logOutput).contains("\"errorCode\":\"\"");
     }
 
     @Test
@@ -95,7 +96,7 @@ class RequestLoggingFilterTests {
 
     @Test
     @WithMockUser(value = "testuser")
-    @DisplayName("Should log 4xx errors with WARN level")
+    @DisplayName("Should log 4xx errors with WARN level and include errorCode")
     void shouldLogClientErrorsWithWarnLevel(CapturedOutput output) throws Exception {
         when(cartQueries.getCartByUserId("testuser")).thenReturn(Optional.empty());
 
@@ -104,6 +105,8 @@ class RequestLoggingFilterTests {
 
         String logOutput = output.getOut();
         assertThat(logOutput).contains("\"level\":\"WARN\"");
+        // Should include errorCode for 4xx errors
+        assertThat(logOutput).containsPattern("\"errorCode\":\"4\\d{2}\"");
     }
 
     @Test
