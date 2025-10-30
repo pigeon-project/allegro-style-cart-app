@@ -107,6 +107,33 @@ This product relies on the shared organization-wide Non-Functional Requirements:
   - Production: OAuth2 Resource Server with JWT validation
 - **Authorization**: Enforced on all `/api/**` and `/` endpoints
 - **Session**: CSRF protection disabled for REST APIs, session management via Spring Session JDBC
+- **Rate Limiting** (SHARED-NFR §13):
+  - Per-user rate limiting enforced on all authenticated endpoints
+  - Default: 60 requests per minute per user
+  - Rate limit headers included in all responses:
+    - `X-RateLimit-Limit`: Maximum requests allowed per minute
+    - `X-RateLimit-Remaining`: Remaining requests in current window
+    - `X-RateLimit-Reset`: Unix timestamp when limit resets
+  - HTTP 429 (Too Many Requests) returned when limit exceeded
+  - `Retry-After` header included in 429 responses with seconds until retry
+  - Configurable via `rate-limit.enabled` and `rate-limit.requests-per-minute` properties
+  - Actuator and public endpoints excluded from rate limiting
+- **Input Validation** (SHARED-NFR §10, §13):
+  - Text inputs trimmed and NFC-normalized before validation
+  - Allowlist validation for text fields using Unicode-aware patterns
+  - Product titles: letters, numbers, spaces, and common punctuation
+  - Validation errors return HTTP 400 with detailed problem details
+- **Security Event Logging** (SHARED-NFR §5):
+  - Authentication successes and failures logged with username
+  - Authorization denials logged with username and resource
+  - Rate limit violations logged with user and endpoint
+- **Secrets Management** (SHARED-NFR §5):
+  - Database credentials via environment variables (JDBC_DATABASE_*)
+  - OAuth2 JWT configuration via Spring Security
+  - No secrets in source control
+- **Least Privilege** (SHARED-NFR §5):
+  - Database access controlled via Spring Data JPA
+  - Service accounts use minimal required permissions
 
 ## Domain Model Implementation
 
