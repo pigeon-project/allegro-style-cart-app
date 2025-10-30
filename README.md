@@ -18,6 +18,8 @@ A shopping cart application with rate limiting and security hardening.
 
 ### Running the Application
 
+#### Local Development
+
 ```bash
 ./gradlew bootRun
 ```
@@ -27,6 +29,91 @@ The application will start on `http://localhost:8080`.
 Default credentials:
 - Username: `admin`
 - Password: `password`
+
+#### Docker Deployment
+
+The application includes a production-ready multi-stage Dockerfile for containerized deployment.
+
+**Build the Docker image:**
+
+```bash
+docker build -t allegro-cart:latest .
+```
+
+The build process:
+- Uses multi-stage builds to separate build and runtime environments
+- Builds backend with Java 25 using Gradle
+- Builds frontend with Node.js and Vite (automatically via Gradle)
+- Final image uses Eclipse Temurin JRE for minimal size (~389MB)
+- Includes health checks for liveness and readiness probes
+
+**Run the container (development mode):**
+
+```bash
+docker run -d \
+  --name allegro-cart \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=default \
+  allegro-cart:latest
+```
+
+**Run the container (production mode with external database):**
+
+```bash
+docker run -d \
+  --name allegro-cart \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=production \
+  -e JDBC_DATABASE_URL=jdbc:mysql://host.docker.internal:3306/cartdb \
+  -e JDBC_DATABASE_USERNAME=cartuser \
+  -e JDBC_DATABASE_PASSWORD=securepassword \
+  allegro-cart:latest
+```
+
+**Health checks:**
+
+The container includes automated health checks using Spring Boot Actuator:
+
+```bash
+# Liveness probe (container is alive)
+curl http://localhost:8080/actuator/health/liveness
+
+# Readiness probe (container is ready to receive traffic)
+curl http://localhost:8080/actuator/health/readiness
+```
+
+**View container logs:**
+
+```bash
+docker logs -f allegro-cart
+```
+
+**Stop and remove the container:**
+
+```bash
+docker stop allegro-cart
+docker rm allegro-cart
+```
+
+**Using Docker Compose:**
+
+For easier management, use the included `docker-compose.yml`:
+
+```bash
+# Start the application
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Check status
+docker compose ps
+
+# Stop and remove containers
+docker compose down
+```
+
+The Docker Compose configuration includes examples for both H2 in-memory database (default) and MySQL setup. To use MySQL, uncomment the database sections in `docker-compose.yml`.
 
 ## Features
 

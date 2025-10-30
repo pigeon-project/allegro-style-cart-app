@@ -1,1 +1,64 @@
+# Build artifacts and caches
 *-plain.jar
+build/
+.gradle/
+node_modules/
+frontend/build/
+frontend/node_modules/
+target/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git and CI/CD
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# Documentation and non-essential files
+*.md
+!README.md
+docs/
+spec/
+test-results/
+playwright-report/
+
+# Test files
+**/*test*
+**/*Test*
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Other
+.husky/
+coverage/
+dist/
+tmp/

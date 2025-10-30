@@ -1,0 +1,75 @@
+# Docker Compose configuration for local development and testing
+# This file demonstrates how to run the application with Docker Compose
+
+services:
+  # Allegro Cart Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: allegro-cart:latest
+    container_name: allegro-cart-app
+    ports:
+      - "8080:8080"
+    environment:
+      # Use default profile for development with H2 in-memory database
+      SPRING_PROFILES_ACTIVE: default
+      # JVM options are already configured in the Dockerfile
+    healthcheck:
+      # Note: curl is installed in the container image (see Dockerfile)
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # Example: Application with MySQL database (uncomment to use)
+  # Uncomment the sections below to run with MySQL instead of H2
+  
+  # db:
+  #   image: mysql:8.0
+  #   container_name: allegro-cart-db
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: rootpassword
+  #     MYSQL_DATABASE: cartdb
+  #     MYSQL_USER: cartuser
+  #     MYSQL_PASSWORD: securepassword
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql-data:/var/lib/mysql
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: unless-stopped
+
+  # app-with-mysql:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   image: allegro-cart:latest
+  #   container_name: allegro-cart-app-mysql
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: production
+  #     JDBC_DATABASE_URL: jdbc:mysql://db:3306/cartdb
+  #     JDBC_DATABASE_USERNAME: cartuser
+  #     JDBC_DATABASE_PASSWORD: securepassword
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     # Note: curl is installed in the container image (see Dockerfile)
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness"]
+  #     interval: 30s
+  #     timeout: 3s
+  #     retries: 3
+  #     start_period: 60s
+  #   restart: unless-stopped
+
+# volumes:
+#   mysql-data:
