@@ -266,6 +266,56 @@ A React component that groups cart items by seller with comprehensive selection 
 />
 ```
 
+### RecommendedProducts Component
+A React component that displays a carousel of recommended products with one-click add-to-cart functionality.
+
+**Purpose**: Demonstrates product recommendations with seamless shopping experience, allowing users to quickly add items to their cart without leaving the current page.
+
+**Key Features**:
+- **Product carousel**: Displays 6 mocked products with images, titles, and prices
+- **One-click add-to-cart**: Each product card has an "Add to Cart" button that adds the item with optimistic updates
+- **Desktop arrow navigation**: Previous/Next buttons on either side of the carousel (hidden on mobile)
+- **Touch-friendly swipe gestures**: Supports pointer events for swiping on mobile/tablet devices
+- **Keyboard navigation**: Arrow keys (Left/Right) navigate through the carousel when focused
+- **Dot indicators**: Visual pagination dots show current position and allow direct navigation
+- **Smooth animations**: Uses react-spring for fluid carousel transitions
+- **Success toast notification**: Shows a temporary green toast when an item is successfully added
+- **Responsive layout**: Adapts items per view based on viewport (1 on mobile, 2 on tablet, 3 on desktop)
+- **Dark mode support**: Full theming integration with dark mode styles
+- **Loading states**: Disables all add-to-cart buttons during mutation
+- **Accessibility**: 
+  - Proper ARIA labels and roles
+  - Keyboard focusable carousel container
+  - Touch-friendly controls (44px minimum touch target)
+  - Screen reader friendly toast alerts
+
+**Implementation Details**:
+- Located at: `frontend/src/components/RecommendedProducts.tsx`
+- Mock data at: `frontend/src/data/mockProducts.ts`
+- Test coverage: 29 comprehensive test cases covering:
+  - Component rendering and product display
+  - Add-to-cart functionality with optimistic updates
+  - Carousel navigation (arrows, dots, keyboard, swipe gestures)
+  - Success toast display and auto-hide
+  - Responsive behavior
+  - Dark mode support
+  - Accessibility features
+  - Touch/swipe gesture support
+- Uses React hooks: `useState`, `useRef`, `useEffect`
+- Integrates with `useAddCartItem` mutation from React Query
+- Uses `react-spring` for animations
+
+**Usage Example**:
+```tsx
+<RecommendedProducts />
+```
+
+**Technical Notes**:
+- Automatically calculates items per view based on window width
+- Handles pointer events for touch/mouse interactions
+- Prevents navigation beyond carousel boundaries
+- Cleans up event listeners on unmount
+
 ### CartSummary Component
 A React component that displays the order summary with total price calculation for selected cart items.
 

@@ -3,6 +3,7 @@ import SellerGroup from "./components/SellerGroup";
 import CartSummary from "./components/CartSummary";
 import CartHeader from "./components/CartHeader";
 import EmptyCart from "./components/EmptyCart";
+import RecommendedProducts from "./components/RecommendedProducts";
 import type { CartItemResponse } from "./api-types";
 import { useDarkMode } from "./hooks/useDarkMode";
 
@@ -214,6 +215,11 @@ export default function CartItemDemo() {
           </div>
         </main>
 
+        {/* Recommended Products Section */}
+        <section className="mt-8">
+          <RecommendedProducts />
+        </section>
+
         <footer className="mt-8 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
           <h2 className="font-semibold text-lg mb-2">Features Demonstrated:</h2>
           <ul className="list-disc list-inside space-y-1 text-sm text-slate-600 dark:text-slate-400">
@@ -269,6 +275,34 @@ export default function CartItemDemo() {
               <strong>
                 Sticky positioning on desktop, fixed at bottom on mobile
               </strong>
+            </li>
+            <li>
+              <strong>
+                Recommended products carousel with one-click add-to-cart
+              </strong>
+            </li>
+            <li>
+              <strong>
+                Arrow navigation on desktop (with disabled states)
+              </strong>
+            </li>
+            <li>
+              <strong>Touch-friendly swipe gestures on mobile/tablet</strong>
+            </li>
+            <li>
+              <strong>Keyboard navigation (ArrowLeft/ArrowRight keys)</strong>
+            </li>
+            <li>
+              <strong>Dot indicators for navigation</strong>
+            </li>
+            <li>
+              <strong>Smooth animations using react-spring</strong>
+            </li>
+            <li>
+              <strong>Success toast notification when item added</strong>
+            </li>
+            <li>
+              <strong>Responsive carousel (1/2/3 items per view)</strong>
             </li>
             <li>Touch-friendly buttons (44px minimum touch target)</li>
             <li>Responsive layout (mobile/tablet/desktop)</li>
