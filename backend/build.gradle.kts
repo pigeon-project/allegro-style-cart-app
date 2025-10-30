@@ -30,6 +30,10 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-parameters")
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
