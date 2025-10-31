@@ -281,6 +281,45 @@ class CartControllerTests {
         }
 
         @Test
+        @WithMockUser(value = "testuser")
+        @DisplayName("Should accept product image URLs with query parameters")
+        void shouldAcceptProductImageURLsWithQueryParameters() throws Exception {
+            UUID cartId = UUID.randomUUID();
+            UUID itemId = UUID.randomUUID();
+            UUID sellerId = UUID.randomUUID();
+            Cart cart = new Cart(cartId, "testuser");
+
+            when(cartQueries.getCartByUserId("testuser")).thenReturn(Optional.of(cart));
+            when(cartCommands.addCartItem(any(), any(), any(), any(), any(), anyInt())).thenReturn(itemId);
+
+            String requestBody = """
+                    {
+                        "sellerId": "%s",
+                        "productImage": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
+                        "productTitle": "Premium Wireless Headphones",
+                        "pricePerUnit": 299.99,
+                        "quantity": 1
+                    }
+                    """.formatted(sellerId);
+
+            mockMvc.perform(post("/api/cart/items")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isCreated())
+                    .andExpect(header().string("Location", "/api/cart/items/" + itemId));
+
+            verify(cartCommands).addCartItem(
+                    eq(cartId),
+                    eq(sellerId),
+                    eq("https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop"),
+                    eq("Premium Wireless Headphones"),
+                    eq(new BigDecimal("299.99")),
+                    eq(1)
+            );
+        }
+
+        @Test
         @DisplayName("Should return 401 when not authenticated")
         void shouldReturn401WhenNotAuthenticated() throws Exception {
             String requestBody = """

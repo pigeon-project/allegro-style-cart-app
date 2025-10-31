@@ -53,6 +53,12 @@ public final class TextUtils {
     public static final String PRODUCT_TEXT_PATTERN = "^[\\p{L}\\p{N}\\p{Z}\\p{P}]+$";
 
     /**
+     * Allowlist pattern for product image URLs.
+     * Allows: letters, numbers, spaces, punctuation, and symbols (for query parameters like =)
+     */
+    public static final String PRODUCT_URL_PATTERN = "^[\\p{L}\\p{N}\\p{Z}\\p{P}\\p{S}]+$";
+
+    /**
      * Allowlist pattern for seller names.
      * Allows: letters, numbers, spaces, hyphens, and underscores
      */

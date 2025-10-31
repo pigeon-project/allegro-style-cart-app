@@ -19,7 +19,7 @@ public record AddCartItemRequest(
         UUID sellerId,
 
         @Schema(description = "Product image URL", example = "https://example.com/product.jpg")
-        @Allowlist(pattern = TextUtils.PRODUCT_TEXT_PATTERN, message = "Product image URL contains invalid characters")
+        @Allowlist(pattern = TextUtils.PRODUCT_URL_PATTERN, message = "Product image URL contains invalid characters")
         String productImage,
 
         @Schema(description = "Product title", example = "Wireless Mouse", required = true)
