@@ -52,8 +52,9 @@ COPY --from=backend-builder --chown=spring:spring /workspace/build/libs/workspac
 # Switch to non-root user
 USER spring:spring
 
-# Set environment variables for production
-ENV SPRING_PROFILES_ACTIVE=production \
+# Change SPRING_PROFILES_ACTIVE to production in case of production deployment and using external database
+# default means using internal in-memory database
+ENV SPRING_PROFILES_ACTIVE=default \
     JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+UseZGC -XX:+ZGenerational" \
     SERVER_PORT=8080
 
