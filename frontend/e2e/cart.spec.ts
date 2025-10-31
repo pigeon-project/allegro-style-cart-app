@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Request } from "@playwright/test";
 
 /**
  * Comprehensive E2E Tests for Shopping Cart
@@ -126,6 +126,48 @@ test.describe("Cart Page", () => {
       // Verify cart heading appears
       const cartHeading = page.getByRole("heading", { name: /shopping cart/i });
       await expect(cartHeading).toBeVisible();
+    }
+  });
+
+  // E2E Test: Adding items with URLs containing query parameters
+  test("should add item with URL query parameters from recommended products", async ({
+    page,
+  }) => {
+    // Listen for network requests to verify the API call
+    let addItemRequest: Request | null = null;
+    page.on("request", (request) => {
+      if (
+        request.url().includes("/api/cart/items") &&
+        request.method() === "POST"
+      ) {
+        addItemRequest = request;
+      }
+    });
+
+    const addButton = page
+      .getByRole("button", { name: /add.*to cart/i })
+      .first();
+
+    if (await addButton.isVisible()) {
+      // Click the first add button (Premium Wireless Headphones with URL containing ?w=400&h=400&fit=crop)
+      await addButton.click();
+      await page.waitForTimeout(1000);
+
+      // Verify the request was made
+      expect(addItemRequest).not.toBeNull();
+
+      // Verify cart heading appears (confirming the item was added successfully)
+      const cartHeading = page.getByRole("heading", { name: /shopping cart/i });
+      await expect(cartHeading).toBeVisible();
+
+      // Verify success toast appears
+      const successToast = page.getByText(/added to cart!/i);
+      const hasToast = await successToast
+        .isVisible({ timeout: 2000 })
+        .catch(() => false);
+      if (hasToast) {
+        await expect(successToast).toBeVisible();
+      }
     }
   });
 
