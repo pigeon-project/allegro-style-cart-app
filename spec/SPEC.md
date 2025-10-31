@@ -175,6 +175,15 @@ docker run -d -p 8080:8080 \
   - `JDBC_DATABASE_PASSWORD`
 - **ORM**: Spring Data JPA with Hibernate
 - **Connection Pooling**: HikariCP (default in Spring Boot)
+- **Schema Initialization**: 
+  - Schema defined in `schema.sql` (executed on startup)
+  - Reference data initialized in `data.sql` (executed after schema)
+  - H2 uses `MERGE INTO` syntax for idempotent inserts
+  - Pre-populated sellers for recommended products carousel:
+    - `550e8400-e29b-41d4-a716-446655440001` - Premium Electronics Store
+    - `550e8400-e29b-41d4-a716-446655440002` - Smart Tech Gadgets
+    - `550e8400-e29b-41d4-a716-446655440003` - Fashion & Accessories
+    - `550e8400-e29b-41d4-a716-446655440004` - Audio & Sound Equipment
 
 ### Session Management
 - **Type**: JDBC-based HTTP sessions (Spring Session)
