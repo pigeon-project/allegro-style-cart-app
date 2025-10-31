@@ -55,7 +55,7 @@ USER spring:spring
 # Change SPRING_PROFILES_ACTIVE to production in case of production deployment and using external database
 # default means using internal in-memory database
 ENV SPRING_PROFILES_ACTIVE=default \
-    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+UseZGC -XX:+ZGenerational" \
+    JAVA_TOOL_OPTIONS="-XX:InitialRAMPercentage=25.0 -XX:MaxRAMPercentage=75.0 -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20 -XX:+UseZGC -XX:+ZGenerational" \
     SERVER_PORT=8080
 
 # Expose application port
